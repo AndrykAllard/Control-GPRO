@@ -232,3 +232,18 @@ table.cost tr.cl1 td.d{background:var(--cband)}table.cost tr.irw td.d{background
 table.cost tr.cline td.d{background:#fff}
 table.cost td.now{box-shadow:inset 0 0 0 999px rgba(100,204,201,.14)}
 table.cost thead tr.sub th{font-size:9.5px;letter-spacing:.3px;overflow-wrap:anywhere;hyphens:auto}
+/* verificador de sincronización (solo versión en la nube) */
+body.has-syncbar .wrap{padding-bottom:72px}
+.syncbar{position:fixed;left:0;right:0;bottom:0;z-index:45;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--white);border-top:1px solid var(--line);box-shadow:0 -4px 14px rgba(37,55,70,.08);padding:8px 28px calc(8px + env(safe-area-inset-bottom,0px));font-size:12px;color:var(--navy)}
+@media (max-width:700px){.syncbar{padding-inline:16px}}
+.syncbar .sdot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;background:var(--gold)}
+.syncbar[data-st="ok"] .sdot{background:var(--green2)}
+.syncbar[data-st="bad"] .sdot{background:var(--red)}
+.syncbar[data-st="busy"] .sdot{background:var(--gold)}
+@media (prefers-reduced-motion:no-preference){.syncbar[data-st="busy"] .sdot{animation:spulse 1s ease-in-out infinite}}
+@keyframes spulse{50%{opacity:.35}}
+.syncbar[data-st="bad"] .stxt{color:var(--red);font-weight:bold}
+.syncbar .stxt em{font-style:normal;color:var(--red)}
+.syncbar .btn-ghost.sm{padding:5px 12px;font-size:11.5px}
+.syncbar button:disabled{opacity:.5;cursor:default}
+body.has-syncbar .toast{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
