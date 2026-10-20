@@ -1,0 +1,662 @@
+{
+"exportado": "2026-10-07T22:02:46Z",
+"proyectos": [
+{
+"id": "c27-rom-lp",
+"nombre": "ROM LP",
+"desc": "ROM Largo Plazo",
+"jefeIng": "Lorena Rojas",
+"jefeEje": "Enrique Pino",
+"monto": 1766.1,
+"fase": "",
+"tipo": "C3",
+"pep": "",
+"orden": 1,
+"etapas": {},
+"gates": {}
+},
+{
+"id": "c27-sulfuros",
+"nombre": "Sulfuros Primarios",
+"desc": "Sulfuros Primarios",
+"jefeIng": "Lorena Rojas",
+"jefeEje": "TBD",
+"monto": 1644.5,
+"fase": "",
+"tipo": "C3",
+"pep": "",
+"orden": 2,
+"etapas": {},
+"gates": {}
+},
+{
+"id": "c27-scp-f2",
+"nombre": "SCP Fase 2",
+"desc": "SCP Fase 2",
+"jefeIng": "Evelyn Herlitz",
+"jefeEje": "Eduardo Leiva",
+"monto": 1461.6,
+"fase": "",
+"tipo": "C3",
+"pep": "",
+"orden": 3,
+"etapas": {},
+"gates": {}
+},
+{
+"id": "c27-84-modulos",
+"nombre": "84 Módulos",
+"desc": "PFS 84 Módulos Heap Leach",
+"jefeIng": "Evelyn Herlitz",
+"jefeEje": "Enrique Pino",
+"monto": 500.0,
+"fase": "PFS",
+"tipo": "C3",
+"pep": "",
+"orden": 4,
+"etapas": {},
+"gates": {}
+},
+{
+"id": "c27-planta-ro",
+"nombre": "Planta RO",
+"desc": "PFS Planta RO",
+"jefeIng": "Cristian Díaz",
+"jefeEje": "TBD",
+"monto": 100.0,
+"fase": "PFS",
+"tipo": "C3",
+"pep": "",
+"orden": 5,
+"etapas": {},
+"gates": {}
+},
+{
+"id": "c27-ptas",
+"nombre": "PTAS",
+"desc": "PFS Mejoramiento PTAS 3400",
+"jefeIng": "Cristian Díaz",
+"jefeEje": "TBD",
+"monto": 200.0,
+"fase": "PFS",
+"tipo": "C3",
+"pep": "",
+"orden": 6,
+"etapas": {},
+"gates": {}
+},
+{
+"id": "c27-carro-cv007",
+"nombre": "Carro CV 007",
+"desc": "PFS Levantamiento Solución Definitiva Carro CV 007",
+"jefeIng": "Maximilian Campaña",
+"jefeEje": "TBD",
+"monto": 232.0,
+"fase": "PFS",
+"tipo": "C3",
+"pep": "",
+"orden": 7,
+"etapas": {
+"prep": "ok",
+"inputs": "ok",
+"bd": "ok",
+"p30": "ok",
+"p60": "ok",
+"rev": "ok",
+"p90": "pin"
+},
+"gates": {}
+},
+{
+"id": "c27-piscina-refino",
+"nombre": "Piscina refino",
+"desc": "PFS Reparación Geomembrana Piscina Refino",
+"jefeIng": "Maximilian Campaña",
+"jefeEje": "TBD",
+"monto": 250.0,
+"fase": "PFS",
+"tipo": "C3",
+"pep": "",
+"orden": 8,
+"etapas": {},
+"gates": {}
+},
+{
+"id": "c27-taller-cables",
+"nombre": "Taller Reparación Cables Mina",
+"desc": "PFS Normalización Taller Reparación de cables Mina",
+"jefeIng": "Cristian Díaz",
+"jefeEje": "TBD",
+"monto": 50.0,
+"fase": "PFS",
+"tipo": "C3",
+"pep": "",
+"orden": 9,
+"etapas": {},
+"gates": {}
+},
+{
+"id": "c27-calaminas-sx",
+"nombre": "Calaminas Laterales SX",
+"desc": "PFS Calaminas Laterales SX (Delivery Project)",
+"jefeIng": "Cristian Díaz",
+"jefeEje": "TBD",
+"monto": 50.0,
+"fase": "PFS",
+"tipo": "C3",
+"pep": "",
+"orden": 10,
+"etapas": {},
+"gates": {}
+},
+{
+"id": "c27-linea-pls",
+"nombre": "Línea PLS",
+"desc": "PFS Línea PLS",
+"jefeIng": "Cristian Díaz",
+"jefeEje": "TBD",
+"monto": 80.0,
+"fase": "PFS",
+"tipo": "C3",
+"pep": "",
+"orden": 11,
+"etapas": {
+"prep": "ok",
+"inputs": "ok",
+"bd": "ok",
+"p30": "pin"
+},
+"gates": {}
+},
+{
+"id": "c27-tambor",
+"nombre": "Tambor Aglomerador",
+"desc": "Estudio Vibraciones Tambor Aglomerador",
+"jefeIng": "Lorena Rojas",
+"jefeEje": "",
+"monto": 80.0,
+"fase": "",
+"tipo": "C3",
+"pep": "",
+"orden": 12,
+"etapas": {},
+"gates": {}
+}
+],
+"ajustes": [
+{
+"id": "rescate-monumentos",
+"nombre": "Canal de Contorno Ripios Fase 2",
+"desc": "Rescate de Monumentos Nacionales (Ripios Fase 2) · Permisos",
+"tipo": "C3",
+"monto": -1198.4,
+"orden": 1
+},
+{
+"id": "ensayos-geotecnicos",
+"nombre": "Ensayos Geotécnicos Ripios Fase 2",
+"desc": "Ensayos",
+"tipo": "C3",
+"monto": -47.6,
+"orden": 2
+},
+{
+"id": "linea-acido-sx",
+"nombre": "Línea Ácido SX",
+"desc": "PFS Línea Ácido SX · Estudio",
+"tipo": "C3",
+"monto": -119.8,
+"orden": 3
+}
+],
+"iniciativas": [
+{
+"id": "i-romlp-pfs",
+"proyectoId": "c27-rom-lp",
+"nombre": "PFS ROM Largo Plazo",
+"kind": "ing",
+"ppto": 459.5,
+"cb": 459.5,
+"proveedor": "",
+"oc": "",
+"responsable": "",
+"inicio": "",
+"termino": "",
+"etapas": {},
+"orden": 1
+},
+{
+"id": "i-romlp-geotec",
+"proyectoId": "c27-rom-lp",
+"nombre": "Ensayos geotécnicos ROM - Cuprochlor",
+"kind": "ens",
+"ppto": 1007.0,
+"cb": 357.0,
+"proveedor": "",
+"oc": "",
+"responsable": "",
+"inicio": "",
+"termino": "",
+"etapas": {},
+"orden": 2
+},
+{
+"id": "i-romlp-metal",
+"proyectoId": "c27-rom-lp",
+"nombre": "Ensayos metalúrgicos ROM",
+"kind": "ens",
+"ppto": 299.6,
+"cb": 299.6,
+"proveedor": "",
+"oc": "",
+"responsable": "",
+"inicio": "",
+"termino": "",
+"etapas": {},
+"orden": 3
+}
+],
+"costos": [
+{
+"id": "cos-canales-f2",
+"nombre": "Canales de Contorno Ripios Fase 2",
+"pep": "",
+"periodo": "2026-10",
+"proyectoId": "",
+"orden": 1,
+"lines": {
+"cont": {
+"flujo": {
+"CY28": 2832.4
+},
+"base": 2832.4
+}
+},
+"items": [
+{
+"id": "it01",
+"line": "ing",
+"parent": null,
+"group": false,
+"nombre": "Ingeniería de Terreno",
+"cant": null,
+"unidad": "",
+"ppto": 0,
+"meses": null,
+"c": {},
+"flujo": {},
+"orden": 1
+},
+{
+"id": "g-canales",
+"line": "con",
+"parent": null,
+"group": true,
+"nombre": "Construcción Canales de Contorno",
+"cant": null,
+"unidad": "",
+"ppto": null,
+"meses": null,
+"c": {},
+"flujo": {},
+"orden": 2
+},
+{
+"id": "it03",
+"line": "con",
+"parent": "g-canales",
+"group": false,
+"nombre": "Excavación Masivo – Suelo Común",
+"cant": 185563,
+"unidad": "m3",
+"ppto": 2256,
+"meses": 8,
+"c": {},
+"flujo": {
+"2027-09": 282.0,
+"2027-10": 282.0,
+"2027-11": 282.0,
+"2027-12": 282.0,
+"CY28": 1128.0
+},
+"orden": 3
+},
+{
+"id": "it04",
+"line": "con",
+"parent": "g-canales",
+"group": false,
+"nombre": "Perforación y Tronadura",
+"cant": 44481,
+"unidad": "m3",
+"ppto": 946,
+"meses": 8,
+"c": {},
+"flujo": {
+"2027-09": 118.25,
+"2027-10": 118.25,
+"2027-11": 118.25,
+"2027-12": 118.25,
+"CY28": 473.0
+},
+"orden": 4
+},
+{
+"id": "it05",
+"line": "con",
+"parent": "g-canales",
+"group": false,
+"nombre": "Excavación Masivo – Roca Sana",
+"cant": 44481,
+"unidad": "m3",
+"ppto": 793,
+"meses": 8,
+"c": {},
+"flujo": {
+"2027-09": 99.125,
+"2027-10": 99.125,
+"2027-11": 99.125,
+"2027-12": 99.125,
+"CY28": 396.5
+},
+"orden": 5
+},
+{
+"id": "it06",
+"line": "con",
+"parent": "g-canales",
+"group": false,
+"nombre": "Relleno Masivo – Material de Excavación",
+"cant": 222787,
+"unidad": "m3",
+"ppto": 2635,
+"meses": 8,
+"c": {},
+"flujo": {
+"2027-09": 329.375,
+"2027-10": 329.375,
+"2027-11": 329.375,
+"2027-12": 329.375,
+"CY28": 1317.5
+},
+"orden": 6
+},
+{
+"id": "it07",
+"line": "con",
+"parent": "g-canales",
+"group": false,
+"nombre": "Instalación Geomembrana",
+"cant": 208178,
+"unidad": "m2",
+"ppto": 2082,
+"meses": 8,
+"c": {},
+"flujo": {
+"2027-09": 260.25,
+"2027-10": 260.25,
+"2027-11": 260.25,
+"2027-12": 260.25,
+"CY28": 1041.0
+},
+"orden": 7
+},
+{
+"id": "it08",
+"line": "con",
+"parent": "g-canales",
+"group": false,
+"nombre": "Instalación Geotextil",
+"cant": 41658,
+"unidad": "m2",
+"ppto": 426,
+"meses": 8,
+"c": {},
+"flujo": {
+"2027-09": 53.25,
+"2027-10": 53.25,
+"2027-11": 53.25,
+"2027-12": 53.25,
+"CY28": 213.0
+},
+"orden": 8
+},
+{
+"id": "it09",
+"line": "con",
+"parent": "g-canales",
+"group": false,
+"nombre": "Instalación Geonet",
+"cant": 41636,
+"unidad": "m2",
+"ppto": 125,
+"meses": 8,
+"c": {},
+"flujo": {
+"2027-09": 15.625,
+"2027-10": 15.625,
+"2027-11": 15.625,
+"2027-12": 15.625,
+"CY28": 62.5
+},
+"orden": 9
+},
+{
+"id": "it10",
+"line": "con",
+"parent": "g-canales",
+"group": false,
+"nombre": "Alcantarillado y Drenaje (Obra de Arte)",
+"cant": null,
+"unidad": "",
+"ppto": 656,
+"meses": 2,
+"c": {},
+"flujo": {
+"2027-09": 328,
+"2027-10": 328
+},
+"orden": 10
+},
+{
+"id": "it11",
+"line": "con",
+"parent": "g-canales",
+"group": false,
+"nombre": "Contrato Liberación UXOS",
+"cant": null,
+"unidad": "",
+"ppto": 204,
+"meses": null,
+"c": {},
+"flujo": {
+"2027-09": 204
+},
+"orden": 11
+},
+{
+"id": "it12",
+"line": "con",
+"parent": null,
+"group": false,
+"nombre": "Construcción Piscina de Recuperación 45.000 m3",
+"cant": null,
+"unidad": "",
+"ppto": 3000,
+"meses": null,
+"c": {},
+"flujo": {
+"2027-05": 500,
+"2027-06": 1000,
+"2027-07": 1000,
+"2027-08": 500
+},
+"orden": 12
+},
+{
+"id": "it13",
+"line": "con",
+"parent": null,
+"group": false,
+"nombre": "Construcción Pozos de Monitoreo 10\" 50 metros",
+"cant": null,
+"unidad": "",
+"ppto": 500,
+"meses": null,
+"c": {},
+"flujo": {
+"2027-05": 100,
+"2027-06": 200,
+"2027-07": 200
+},
+"orden": 13
+},
+{
+"id": "it14",
+"line": "con",
+"parent": null,
+"group": false,
+"nombre": "Servicio Inspección ITO",
+"cant": null,
+"unidad": "",
+"ppto": 840,
+"meses": null,
+"c": {},
+"flujo": {
+"2027-05": 70,
+"2027-06": 70,
+"2027-07": 70,
+"2027-08": 70,
+"2027-09": 70,
+"2027-10": 70,
+"2027-11": 70,
+"2027-12": 70,
+"CY28": 280
+},
+"orden": 14
+},
+{
+"id": "it15",
+"line": "con",
+"parent": null,
+"group": false,
+"nombre": "Alojamiento y Alimentación",
+"cant": null,
+"unidad": "",
+"ppto": 400,
+"meses": null,
+"c": {},
+"flujo": {
+"2027-05": 30,
+"2027-06": 30,
+"2027-07": 40,
+"2027-08": 40,
+"2027-09": 40,
+"2027-10": 40,
+"2027-11": 30,
+"2027-12": 30,
+"CY28": 120
+},
+"orden": 15
+},
+{
+"id": "g-permisos",
+"line": "con",
+"parent": null,
+"group": true,
+"nombre": "Permisos",
+"cant": null,
+"unidad": "",
+"ppto": null,
+"meses": null,
+"c": {},
+"flujo": {},
+"orden": 16
+},
+{
+"id": "it17",
+"line": "con",
+"parent": "g-permisos",
+"group": false,
+"nombre": "Rescate Arqueológico",
+"cant": null,
+"unidad": "",
+"ppto": 1003,
+"meses": null,
+"c": {},
+"flujo": {
+"2027-01": 180,
+"2027-02": 180,
+"2027-03": 180,
+"2027-04": 190,
+"2027-05": 180,
+"2027-07": 8.8,
+"CY28": 84.2
+},
+"orden": 17
+},
+{
+"id": "it18",
+"line": "adq",
+"parent": null,
+"group": false,
+"nombre": "Suministro Geomembrana y Geotextil Piscina",
+"cant": null,
+"unidad": "",
+"ppto": 200,
+"meses": null,
+"c": {},
+"flujo": {
+"2027-05": 200
+},
+"orden": 18
+},
+{
+"id": "it19",
+"line": "adq",
+"parent": null,
+"group": false,
+"nombre": "Suministro Geomembrana y Geotextil Canales (1.154 por AED)",
+"cant": null,
+"unidad": "",
+"ppto": 1100,
+"meses": null,
+"c": {},
+"flujo": {
+"2027-05": 500,
+"2027-06": 600
+},
+"orden": 19
+},
+{
+"id": "it20",
+"line": "own",
+"parent": null,
+"group": false,
+"nombre": "Owner ANT (10%)",
+"cant": null,
+"unidad": "",
+"ppto": 1716.6,
+"meses": null,
+"c": {},
+"flujo": {
+"2027-09": 179.988,
+"2027-10": 159.588,
+"2027-11": 125.788,
+"2027-12": 125.788,
+"CY28": 511.57,
+"2027-05": 158.0,
+"2027-06": 190.0,
+"2027-07": 131.88,
+"2027-08": 61.0,
+"2027-01": 18.0,
+"2027-02": 18.0,
+"2027-03": 18.0,
+"2027-04": 19.0
+},
+"orden": 20
+}
+]
+}
+]
+}

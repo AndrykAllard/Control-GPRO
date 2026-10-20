@@ -1,0 +1,181 @@
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <div class="kicker">GPRO Antucoya · Ingeniería</div>
+      <h1>Control de Entregables por Proyecto</h1>
+      <div class="accents"><span style="background:#00778B"></span><span style="background:#64CCC9"></span><span style="background:#4C8C2B"></span><span style="background:#EAAA00"></span><span style="background:#D22630"></span></div>
+    </div>
+    <div class="sync" id="sync">Conectando…</div>
+  </div>
+
+  <nav class="tabs" role="tablist" aria-label="Vistas">
+    <button role="tab" id="tb-ent" data-tab="ent" aria-selected="true" aria-controls="tabEnt">Entregables</button>
+    <button role="tab" id="tb-fin" data-tab="fin" aria-selected="false" aria-controls="tabFin">Flujos financieros</button>
+    <button role="tab" id="tb-cos" data-tab="cos" aria-selected="false" aria-controls="tabCos">Control de costos</button>
+  </nav>
+
+  <div class="tabpane" id="tabEnt" role="tabpanel" aria-labelledby="tb-ent">
+  <section class="chips" id="summary" aria-label="Resumen"></section>
+
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="Tipo de iniciativa" id="fTipo">
+      <button data-v="all" aria-pressed="true">TODOS</button>
+      <button data-v="Capex" aria-pressed="false">CAPEX</button>
+      <button data-v="C3" aria-pressed="false">C3</button>
+      <button data-v="" aria-pressed="false">SIN TIPO</button>
+    </div>
+    <select id="fFase" aria-label="Fase del estudio"></select>
+    <input type="search" id="fQ" placeholder="Buscar proyecto o iniciativa" aria-label="Buscar proyecto o iniciativa">
+    <label class="chk"><input type="checkbox" id="fHide"> Ocultar cerrados</label>
+    <button class="btn-ghost sm" id="expBtn" type="button">Expandir todo</button>
+    <div class="spacer"></div>
+    <!--@DLBTN@-->
+    <button class="btn-ghost" id="xlsBtn" title="Descargar la matriz en Excel">⤓ Excel</button>
+    <button class="btn-ghost" id="addIniBtn">＋ Iniciativa</button>
+    <button class="btn-add" id="addBtn">＋ Agregar Proyecto</button>
+  </div>
+
+  <div class="card">
+    <h2>Matriz de entregables</h2>
+    <div class="scroll">
+      <table lang="es">
+        <thead><tr id="head"></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="empty" hidden>
+      <strong>Aún no hay proyectos</strong>
+      <span>Agrega el primero con “＋ Agregar Proyecto” y luego sus iniciativas con “＋ Iniciativa”.</span>
+    </div>
+  </div>
+
+  <div class="card adj" id="adjCard" hidden>
+    <h2>Ajustes de cartera</h2>
+    <p class="adjnote">Restas de presupuesto que no son proyectos de la matriz, pero se suman al total para cuadrar con el Caso Base.</p>
+    <table class="adjt"><thead><tr><th>Ítem</th><th>Tipo</th><th class="num">PPTO 2027 (kUS$)</th></tr></thead><tbody id="adjBody"></tbody></table>
+  </div>
+
+  <div class="foot" id="legend"></div>
+  </div>
+
+  <div class="tabpane" id="tabFin" role="tabpanel" aria-labelledby="tb-fin" hidden>
+    <section class="chips" id="finKpi" aria-label="Resumen flujos"></section>
+    <div class="card">
+      <div class="fhead"><h2>Curva S · plan acumulado</h2><span class="fsub" id="curveSub"></span></div>
+      <div id="curve" class="curve"></div>
+    </div>
+    <div class="card">
+      <div class="fhead"><h2>Plan mensual por iniciativa</h2><span class="fsub">kUS$ · oct-2026 a dic-2027 · escribe en cualquier celda para corregir</span><span class="spacer"></span><button class="btn-ghost sm" id="xlsBtn2" type="button">⤓ Excel</button></div>
+      <div class="scroll"><table class="fint" id="finTable" lang="es"></table></div>
+      <p class="adjnote" style="margin:10px 0 0">Los proyectos con iniciativas se planifican por iniciativa; los demás, como una sola partida. Los ajustes de cartera (restas) no tienen flujo y no entran en esta hoja.</p>
+    </div>
+  </div>
+
+  <div class="tabpane" id="tabCos" role="tabpanel" aria-labelledby="tb-cos" hidden>
+    <div class="toolbar">
+      <label class="cl" for="cosSel">Proyecto</label><select id="cosSel" aria-label="Proyecto del reporte de costos"></select>
+      <label class="cl" for="cosPer">Período</label><input type="month" id="cosPer" class="permo" aria-label="Período del reporte">
+      <div class="spacer"></div>
+      <button class="btn-ghost sm" id="xlsBtn3" type="button">⤓ Excel</button>
+      <button class="btn-ghost sm" id="cosRen" type="button">✎ Renombrar</button>
+      <button class="btn-add" id="cosNew" type="button" title="Para un proyecto que no está en la matriz">＋ Otro proyecto</button>
+    </div>
+    <section class="chips" id="cosKpi" aria-label="Resumen de costos"></section>
+    <div class="card">
+      <div class="fhead"><h2>Estado de costos · 9 columnas + flujo mensual</h2><span class="fsub">kUS$ · formato PCS-PR-015 · ▸ despliega ítems · “▸ CY27” abre los meses</span><span class="spacer"></span><button class="btn-ghost sm" id="cosExp" type="button">Expandir todo</button><button class="btn-ghost sm" id="cosAddIt" type="button">＋ Ítem</button></div>
+      <div class="scroll"><table class="cost" id="cosTable" lang="es"></table></div>
+      <p class="adjnote" style="margin:10px 0 0">Presupuesto aprobado = base + cambios de alcance y transferencias. Variación = EAC − aprobado (positivo = sobrecosto; EAC vacío = aprobado). Calce = aprobado − total del flujo (CY26 + meses 2027 + CY28): ✓ cuando el flujo cubre el presupuesto.</p>
+    </div>
+    <div class="empty" id="cosEmpty" hidden><strong>Aún no hay reportes de costos</strong><span>Crea el primero con “＋ Nuevo reporte”.</span></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal" hidden>
+  <form class="modal" id="pForm" role="dialog" aria-modal="true" aria-labelledby="mTitle" novalidate>
+    <h3 id="mTitle">Nuevo proyecto</h3>
+    <div class="fgrid">
+      <div class="fld full"><label for="fmNombre">Nombre proyecto (corto)</label><input id="fmNombre" type="text" placeholder="Nombre corto, ej. PTAS" required></div>
+      <div class="fld"><label for="fmFase">Fase de ingeniería</label><select id="fmFase"></select></div>
+      <div class="fld"><label for="fmPep">PEP</label><input id="fmPep" type="text" placeholder="Ej. 1003-25PE413"></div>
+      <div class="fld"><label for="fmMonto">PPTO 2027 (kUS$)</label><input id="fmMonto" type="number" step="0.1" min="0" inputmode="decimal" placeholder="0,0"><span class="fhint" id="fmMontoHint" hidden>Las iniciativas se comparan contra este monto; la diferencia aparece como “sin asignar”.</span></div>
+      <div class="fld"><span class="flab">Tipo de iniciativa</span>
+        <div class="tipo big" role="radiogroup" aria-label="Tipo de iniciativa" id="fmTipo">
+          <button type="button" class="capex" data-v="Capex" role="radio" aria-checked="false">Capex</button>
+          <button type="button" class="c3" data-v="C3" role="radio" aria-checked="false">C3</button>
+        </div></div>
+      <div class="fld"><label for="fmJi">Jefe de Ingeniería</label><input id="fmJi" type="text" list="respList" placeholder="Nombre"></div>
+      <div class="fld"><label for="fmJe">Jefe Ejecutor</label><input id="fmJe" type="text" list="respList" placeholder="Nombre o TBD"><datalist id="respList"></datalist></div>
+      <div class="fld full"><label for="fmDesc">Descripción</label><input id="fmDesc" type="text" placeholder="Ej. PFS Mejoramiento PTAS 3400"></div>
+    </div>
+    <p class="ferr" id="fmErr" hidden>Escribe el nombre del proyecto para poder guardarlo.</p>
+    <div class="factions">
+      <button type="button" class="btn-ghost" id="fmCancel">Cancelar</button>
+      <button type="submit" class="btn-add" id="fmOk">Agregar</button>
+    </div>
+  </form>
+</div>
+
+<div class="modal-bg" id="iModal" hidden>
+  <form class="modal" id="iForm" role="dialog" aria-modal="true" aria-labelledby="iTitle" novalidate>
+    <h3 id="iTitle">Nueva iniciativa</h3>
+    <div class="fgrid">
+      <div class="fld full"><label for="ifP">Proyecto</label><select id="ifP"></select></div>
+      <div class="fld full"><label for="ifNombre">Nombre de la iniciativa</label><input id="ifNombre" type="text" placeholder="Ej. Ensayos metalúrgicos ROM" required></div>
+      <div class="fld full"><span class="flab">Tipo de seguimiento</span>
+        <div class="tipo big kindsel" role="radiogroup" aria-label="Tipo de seguimiento" id="ifKind">
+          <button type="button" class="ing" data-v="ing" role="radio" aria-checked="false">Servicio de ingeniería</button>
+          <button type="button" class="ens" data-v="ens" role="radio" aria-checked="false">Ensayo</button>
+          <button type="button" class="med" data-v="med" role="radio" aria-checked="false">Medición</button>
+        </div></div>
+      <div class="kstages" id="ifStages"></div>
+      <div class="fld"><label for="ifPpto">PPTO 2027 (kUS$)</label><input id="ifPpto" type="number" step="0.1" inputmode="decimal" placeholder="0,0"></div>
+      <div class="fld"><label for="ifCb">CB 2027 (kUS$)</label><input id="ifCb" type="number" step="0.1" inputmode="decimal" placeholder="0,0"></div>
+      <div class="fld"><label for="ifProv">Empresa / proveedor</label><input id="ifProv" type="text" list="provList" placeholder="Ej. laboratorio o consultora"><datalist id="provList"></datalist></div>
+      <div class="fld"><label for="ifOc">N° OC / contrato</label><input id="ifOc" type="text" placeholder="Ej. 4500012345"></div>
+      <div class="fld full"><label for="ifResp">Responsable</label><input id="ifResp" type="text" list="respList" placeholder="Nombre"></div>
+      <div class="fld"><label for="ifIni">Fecha inicio</label><input id="ifIni" type="date"></div>
+      <div class="fld"><label for="ifFin">Fecha término</label><input id="ifFin" type="date"></div>
+    </div>
+    <p class="ferr" id="ifErr" hidden>Elige el proyecto y escribe el nombre de la iniciativa.</p>
+    <div class="factions">
+      <button type="button" class="btn-ghost" id="ifCancel">Cancelar</button>
+      <button type="submit" class="btn-add" id="ifOk">Agregar</button>
+    </div>
+  </form>
+</div>
+
+<div class="modal-bg" id="cModal" hidden>
+  <form class="modal" id="cForm" role="dialog" aria-modal="true" aria-labelledby="cTitle" novalidate style="width:min(440px,100%)">
+    <h3 id="cTitle">Reporte para otro proyecto</h3>
+    <div class="fgrid">
+      <div class="fld full"><label for="cfNombre">Proyecto</label><input id="cfNombre" type="text" list="cosList" placeholder="Ej. Canales de Contorno Ripios Fase 2"><datalist id="cosList"></datalist></div>
+      <div class="fld"><label for="cfPer">Período</label><input id="cfPer" type="month"></div>
+      <div class="fld"><label for="cfPep">PEP</label><input id="cfPep" type="text" placeholder="Opcional"></div>
+    </div>
+    <p class="ferr" id="cfErr" hidden>Escribe el nombre del proyecto.</p>
+    <div class="factions"><button type="button" class="btn-ghost" id="cfCancel">Cancelar</button><button type="submit" class="btn-add" id="cfOk">Crear</button></div>
+  </form>
+</div>
+
+<div class="modal-bg" id="itModal" hidden>
+  <form class="modal" id="itForm" role="dialog" aria-modal="true" aria-labelledby="itTitle" novalidate>
+    <h3 id="itTitle">Nuevo ítem de costo</h3>
+    <div class="fgrid">
+      <div class="fld"><label for="itLine">Partida</label><select id="itLine"></select></div>
+      <div class="fld"><label for="itParent">Dentro de</label><select id="itParent"></select></div>
+      <div class="fld full"><span class="flab">Tipo</span>
+        <div class="tipo big kindsel" role="radiogroup" aria-label="Tipo de ítem" id="itKind">
+          <button type="button" class="ing" data-v="item" role="radio" aria-checked="true">Ítem con monto</button>
+          <button type="button" class="ens" data-v="group" role="radio" aria-checked="false">Grupo (suma sus ítems)</button>
+        </div></div>
+      <div class="fld full"><label for="itNombre">Descripción</label><input id="itNombre" type="text" placeholder="Ej. Excavación masivo – suelo común"></div>
+      <div class="fld itx"><label for="itCant">Cantidad</label><input id="itCant" type="number" step="any" placeholder="Ej. 185563"></div>
+      <div class="fld itx"><label for="itUnid">Unidad</label><input id="itUnid" type="text" placeholder="m3, m2, gl…"></div>
+      <div class="fld itx"><label for="itPpto">Ppto aprobado (kUS$)</label><input id="itPpto" type="number" step="0.1" placeholder="0,0"></div>
+      <div class="fld itx"><label for="itMeses">Meses</label><input id="itMeses" type="number" min="1" step="1" placeholder="Ej. 8"></div>
+      <div class="fld full itx"><label for="itIni">Distribuir el ppto en partes iguales desde</label><select id="itIni"></select><span class="fhint">Reparte el ppto entre los meses indicados. Lo que pase de dic-27 se suma a CY28. Puedes corregir cada mes después.</span></div>
+    </div>
+    <p class="ferr" id="itErr" hidden>Escribe la descripción del ítem.</p>
+    <div class="factions"><button type="button" class="btn-ghost" id="itCancel">Cancelar</button><button type="submit" class="btn-add" id="itOk">Agregar</button></div>
+  </form>
+</div>

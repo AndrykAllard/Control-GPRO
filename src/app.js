@@ -1,0 +1,810 @@
+const STAGES=[
+  {k:"prep",sl:"Preparación",h:"Prepara- ción",t:"Preparación"},
+  {k:"inputs",sl:"Inputs",h:"Inputs / Levant.",t:"Inputs / Levantamientos"},
+  {k:"bd",sl:"BD / Criterios",h:"BD / Criterios",t:"BD / Criterios"},
+  {k:"p30",t:"30%"},
+  {k:"p60",t:"60%"},
+  {k:"rev",sl:"Rev. funcional",h:"Rev. func. / Constr.",t:"Revisión funcional / Constructibilidad"},
+  {k:"p90",t:"90%"},
+  {k:"ifc",sl:"Aprob. / IFC",h:"Aprob. / IFC",t:"Aprobación / IFC"},
+  {k:"cierre",t:"Cierre"}
+];
+/* Tipos de seguimiento por iniciativa: cada uno con sus propias etapas */
+const KINDS={
+  ing:{t:"Servicio de ingeniería",s:"Ing.",stages:STAGES},
+  ens:{t:"Ensayo",s:"Ens.",stages:[
+    {k:"bases",t:"Bases técnicas"},{k:"oc",t:"Contratación / OC"},{k:"muestreo",t:"Muestreo"},
+    {k:"lab",t:"Laboratorio"},{k:"informe",t:"Informe"},{k:"revision",t:"Revisión"},{k:"cierre",t:"Cierre"}]},
+  med:{t:"Medición",s:"Med.",stages:[
+    {k:"plan",t:"Plan"},{k:"oc",t:"Contratación / OC"},{k:"campana",t:"Campaña en terreno"},
+    {k:"proc",t:"Procesamiento"},{k:"informe",t:"Informe"},{k:"cierre",t:"Cierre"}]}
+};
+const FASES=["Perfil","PFS","FS","DET","EJE"];
+const ICON={
+  pend:'<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+  run:'<svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7" fill="currentColor"/><circle cx="7" cy="6.5" r="2" fill="#fff" opacity=".35"/></svg>',
+  pin:'<svg width="16" height="20" viewBox="0 0 16 20"><path d="M8 11v8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="8" cy="6.5" r="5" fill="currentColor"/><circle cx="6.4" cy="5" r="1.5" fill="#fff" opacity=".45"/></svg>',
+  ok:'<svg width="20" height="20" viewBox="0 0 20 20"><rect x="1.5" y="1.5" width="17" height="17" rx="3.5" fill="currentColor"/><path d="M5.6 10.2l3 3 5.8-6.4" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+const STATES=[
+  {k:"pend",t:"Pendiente",cls:""},
+  {k:"run",t:"En curso",cls:"run"},
+  {k:"pin",t:"Siguiente / foco",cls:"pin"},
+  {k:"ok",t:"Completado",cls:"ok"}
+];
+const STATE_TXT={pend:"Pendiente",run:"En curso",pin:"Siguiente / foco",ok:"Completado"};
+const W={pend:0,run:.5,pin:0,ok:1};
+
+let projects=[], inis=[], ajustes=[], costos=[];
+/* almacenamiento: lo define el arranque (base de datos del artifact o navegador local) */
+let store={newId:()=> "l"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),add(){},upd(){},del(){}};
+
+const ui={tipo:"all",fase:"all",q:"",hide:false,confirm:null,open:new Set()};
+try{const s=JSON.parse(localStorage.getItem("gpro-filtros")||"{}");ui.tipo=s.tipo??"all";ui.fase=s.fase??"all";ui.hide=!!s.hide;(s.open||[]).forEach(x=>ui.open.add(x));}catch(e){}
+const saveUi=()=>{try{localStorage.setItem("gpro-filtros",JSON.stringify({tipo:ui.tipo,fase:ui.fase,hide:ui.hide,open:[...ui.open]}))}catch(e){}};
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>n==null||n===""||isNaN(n)?"—":Number(n).toLocaleString("es-CL",{maximumFractionDigits:1});
+const fdate=d=>{if(!d)return "";const [y,m,dd]=d.split("-");return `${dd}-${m}-${y.slice(2)}`;};
+const num=v=>v==null||v===""||isNaN(v)?0:Number(v);
+const adjSum=t=>ajustes.filter(a=>t==null||(a.tipo||"")===t).reduce((s,a)=>s+num(a.monto),0);
+
+/* ---------- cálculos ---------- */
+function stageProg(etapas,stages){
+  const e=etapas||{};let s=0,ok=0,run=0;
+  stages.forEach(st=>{const v=e[st.k]||"pend";s+=W[v];if(v==="ok")ok++;if(v==="run")run++;});
+  const next=stages.find(st=>(e[st.k]||"pend")==="pin")||stages.find(st=>(e[st.k]||"pend")!=="ok");
+  const pins=stages.filter(st=>e[st.k]==="pin").length;
+  return {pct:s/stages.length,ok,run,pins,total:stages.length,falta:stages.length-ok,next:next?{t:next.t}:null};
+}
+const kidsOf=p=>inis.filter(i=>i.proyectoId===p.id).sort((a,b)=>(a.orden||0)-(b.orden||0));
+const iniProg=i=>stageProg(i.etapas,(KINDS[i.kind]||KINDS.ing).stages);
+const kidsSum=p=>kidsOf(p).reduce((s,i)=>s+num(i.ppto),0);
+/* El PPTO del proyecto manda (cuadra con la cartera). Si no tiene, se usa la suma de sus iniciativas. */
+function pMonto(p){return p.monto!=null&&p.monto!==""?num(p.monto):kidsSum(p);}
+function pCB(p){const k=kidsOf(p);return k.length&&k.some(i=>i.cb!=null&&i.cb!=="")?k.reduce((s,i)=>s+num(i.cb),0):null;}
+function progress(p){
+  const k=kidsOf(p);
+  if(!k.length)return stageProg(p.etapas,STAGES);
+  const ps=k.map(i=>({i,pr:iniProg(i),w:Math.max(0,num(i.ppto))}));
+  const tw=ps.reduce((s,x)=>s+x.w,0);
+  const pct=tw>0?ps.reduce((s,x)=>s+x.pr.pct*x.w,0)/tw:ps.reduce((s,x)=>s+x.pr.pct,0)/ps.length;
+  const sum=f=>ps.reduce((s,x)=>s+x.pr[f],0);
+  const nx=ps.find(x=>x.pr.pins)||ps.find(x=>x.pr.falta);
+  return {pct,ok:sum("ok"),run:sum("run"),pins:sum("pins"),total:sum("total"),falta:sum("falta"),
+    next:nx&&nx.pr.next?{t:`${nx.i.nombre}: ${nx.pr.next.t}`}:null,kids:k.length};
+}
+
+/* ---------- render ---------- */
+function renderHead(){
+  $("#head").innerHTML='<th class="first c-name">Proyecto / iniciativa</th><th class="c-tm">Tipo · Monto</th>'+
+    '<th class="c-stg">Seguimiento por etapas</th>'+
+    '<th class="c-gate">Hitos ADS</th><th class="c-av">Avance</th><th class="c-del"></th>';
+  $("#fFase").innerHTML='<option value="all">Todas las fases</option>'+FASES.map(f=>`<option value="${f}">${f}</option>`).join("")+'<option value="">Por definir</option>';
+  $("#fFase").value=ui.fase;
+  document.querySelectorAll("#fTipo button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===ui.tipo)));
+  $("#fHide").checked=ui.hide;
+  $("#legend").innerHTML=STATES.map(s=>`<span class="lg"><span class="st ${s.cls}" style="width:auto;height:auto;cursor:default">${ICON[s.k]}</span>${s.t}</span>`).join("")+
+    Object.entries(KINDS).map(([k,v])=>`<span class="lg"><span class="kind ${k}">${v.s}</span>${v.t}</span>`).join("")+
+    '<span style="margin-left:auto">Toca una celda para cambiar su estado · Monto = PPTO 2027 en kUS$ (con iniciativas, es su suma) · Fuente: Cartera de Inversiones Caso Base 2026.</span>';
+}
+
+const qmatch=s=>(s||"").toLowerCase().includes(ui.q.toLowerCase());
+function visible(){
+  return projects.filter(p=>{
+    if(ui.tipo!=="all"&&(p.tipo||"")!==ui.tipo)return false;
+    if(ui.fase!=="all"&&(p.fase||"")!==ui.fase)return false;
+    if(ui.q&&!qmatch(p.nombre)&&!qmatch(p.desc)&&!kidsOf(p).some(i=>qmatch(i.nombre)||qmatch(i.proveedor)))return false;
+    if(ui.hide&&progress(p).falta===0)return false;
+    return true;
+  });
+}
+
+function renderSummary(){
+  const by=t=>projects.filter(p=>(p.tipo||"")===t);
+  const sum=a=>a.reduce((s,p)=>s+pMonto(p),0);
+  const avg=a=>a.length?a.reduce((s,p)=>s+progress(p).pct,0)/a.length:0;
+  const cap=by("Capex"),c3=by("C3");
+  const prs=projects.map(progress);
+  const falta=prs.reduce((s,x)=>s+x.falta,0),total=prs.reduce((s,x)=>s+x.total,0),foco=prs.reduce((s,x)=>s+x.pins,0);
+  const adjTxt=t=>{const v=adjSum(t);return v?` · ajustes ${fmt(v)}`:"";};
+  $("#summary").innerHTML=`
+    <div class="chip total"><div class="lab">Cartera</div>
+      <div class="num">${fmt(sum(projects)+adjSum(null))}<small>kUS$</small></div>
+      <div class="sub">${projects.length} proyectos · ${inis.length} iniciativas${adjTxt(null)}</div></div>
+    <div class="chip"><div class="lab">Capex</div>
+      <div class="num n-capex">${fmt(sum(cap)+adjSum("Capex"))}<small>kUS$</small></div>
+      <div class="sub">${cap.length} proyecto${cap.length===1?"":"s"}${adjTxt("Capex")} · avance ${Math.round(avg(cap)*100)}%</div></div>
+    <div class="chip"><div class="lab">C3</div>
+      <div class="num n-c3">${fmt(sum(c3)+adjSum("C3"))}<small>kUS$</small></div>
+      <div class="sub">${c3.length} proyecto${c3.length===1?"":"s"}${adjTxt("C3")} · avance ${Math.round(avg(c3)*100)}%</div></div>
+    <div class="chip"><div class="lab">Entregables faltantes</div>
+      <div class="num n-red">${falta}</div>
+      <div class="sub">de ${total} en total</div></div>
+    <div class="chip"><div class="lab">Siguiente / foco</div>
+      <div class="num" style="color:var(--gold)">${foco}</div>
+      <div class="sub">${by("").length} proyecto${by("").length===1?"":"s"} sin tipo asignado</div></div>`;
+}
+
+function stepper(stages,etapas,attr){const e=etapas||{};
+  return `<div class="stepper">${stages.map(s=>{const v=e[s.k]||"pend";
+    return `<div class="step ${v==="ok"?"done":""} ${v==="pin"?"cur":""}">${stBtn(v,s.t,`${attr}="${s.k}"`)}<span class="sl" title="${esc(s.t)}">${esc(s.sl||s.t)}</span></div>`}).join("")}</div>`;}
+const stBtn=(v,label,attrs)=>{const S=STATES.find(x=>x.k===v);return `<button class="st ${S.cls}" ${attrs} title="${esc(label)}: ${S.t}" aria-label="${esc(label)}: ${S.t}">${ICON[v]}</button>`;};
+function progCell(pr){
+  const okW=pr.total?pr.ok/pr.total*100:0,runW=pr.total?pr.run/pr.total*50:0;
+  return `<div class="prog">
+    <div class="l"><b>${Math.round(pr.pct*100)}%</b><span>${pr.falta} faltan</span></div>
+    <div class="bar"><i style="width:${okW}%;background:var(--green2)"></i><i style="width:${runW}%;background:var(--gold)"></i></div>
+    <div class="n">${pr.next?`Próximo: <em>${esc(pr.next.t)}</em>`:"Cerrado"}</div></div>`;
+}
+function gateCell(p){
+  const g=gatesOf(p);if(!g.length)return `<span class="gnone">—</span>`;
+  return `<div class="gl">${g.map(x=>{const cls=x.v==="pend"?"":x.v;
+    return `<button class="gch ${cls}" data-gate="${x.key}" title="${esc(x.t)} · ${x.req} · ${STATE_TXT[x.v]}" aria-label="${esc(x.t)}: ${STATE_TXT[x.v]}"><span class="gi">${ICON_S[x.v]}</span>${esc(x.t.split(" · ")[0])}<em class="${x.oblig?"ob":""}">${x.oblig?"Oblig.":"Opc."}</em></button>`}).join("")}</div>`;
+}
+function projectRow(p,idx){
+  const k=kidsOf(p),pr=progress(p),open=ui.open.has(p.id)||(ui.q&&k.some(i=>qmatch(i.nombre)||qmatch(i.proveedor))),e=p.etapas||{};
+  const confirm=ui.confirm===p.id;
+  const ks=kidsSum(p),diff=+(pMonto(p)-ks).toFixed(1);
+  const montoCell=`<div class="monto"><input type="number" id="m-${p.id}" inputmode="decimal" step="0.1" min="0" placeholder="${k.length?fmt(ks):"—"}" value="${p.monto??""}" data-f="monto" aria-label="PPTO 2027 en kUS$"><small>kUS$</small></div>`+
+    (k.length?`<div class="msum">${pCB(p)!=null?`<span>CB ${fmt(pCB(p))}</span>`:""}${diff?`<span class="${diff>0?"unas":"over"}" title="Iniciativas suman ${fmt(ks)}">${diff>0?"Sin asignar":"Excede"} ${fmt(Math.abs(diff))}</span>`:`<span class="asg" title="Las iniciativas suman el PPTO del proyecto">✓ asignado</span>`}</div>`:"");
+  const stagesCell=k.length
+    ?`<td class="ksumc"><div class="ksum" data-act="toggle" title="${open?"Ocultar":"Ver"} el detalle de las iniciativas">${k.map(i=>{const ip=iniProg(i),pc=Math.round(ip.pct*100);
+        return `<div class="kcol" style="flex:${Math.max(num(i.ppto),1)} 1 0"><div class="kseg ${i.kind}"><i style="width:${pc}%"></i></div>
+          <div class="klab"><span class="kdot ${i.kind}" title="${esc(KINDS[i.kind].t)}"></span><span class="kn">${esc(i.nombre)}</span><b>${pc}%</b></div></div>`}).join("")}</div></td>`
+    :`<td class="stepc">${stepper(STAGES,e,"data-stage")}</td>`;
+  let html=`<tr class="prow${idx%2?" alt":""}${k.length?" has":""}" data-id="${p.id}">
+    <td class="first"><div class="pname">
+      <div class="prow-h"><button class="tog${k.length?"":" ph"}" data-act="toggle" aria-expanded="${!!open}" aria-label="${open?"Contraer":"Expandir"} iniciativas" ${k.length?"":"tabindex=\"-1\""}>${open?"▾":"▸"}</button>
+        <input type="text" id="n-${p.id}" value="${esc(p.nombre)}" data-f="nombre" aria-label="Nombre del proyecto"></div>
+      ${p.desc&&p.desc!==p.nombre?`<span class="ref">${esc(p.desc)}</span>`:""}
+      ${(p.pep||p.jefeIng||p.jefeEje)?`<div class="pinfo">${p.jefeIng?`<span>JI <b>${esc(p.jefeIng)}</b></span>`:""}${p.jefeEje?`<span>JE <b>${esc(p.jefeEje)}</b></span>`:""}${p.pep?`<span>PEP <b>${esc(p.pep)}</b></span>`:""}</div>`:""}
+      <div class="pmeta"><select class="fase" id="f-${p.id}" data-f="fase" aria-label="Fase"><option value="" ${!p.fase?"selected":""}>Por definir</option>${FASES.map(f=>`<option ${p.fase===f?"selected":""}>${f}</option>`).join("")}</select>${k.length?`<span class="kcount">${k.length} iniciativa${k.length===1?"":"s"}</span>`:""}</div>
+    </div></td>
+    <td><div class="tm"><div class="tipo" role="group" aria-label="Tipo de iniciativa">
+      <button class="capex ${p.tipo==="Capex"?"on":""}" data-tipo="Capex" aria-pressed="${p.tipo==="Capex"}">Capex</button>
+      <button class="c3 ${p.tipo==="C3"?"on":""}" data-tipo="C3" aria-pressed="${p.tipo==="C3"}">C3</button>
+    </div>${montoCell}</div></td>
+    ${stagesCell}
+    <td class="gate">${gateCell(p)}</td>
+    <td>${progCell(pr)}</td>
+    <td>${confirm?`<div class="confirm"><button class="yes" data-act="del-yes">Eliminar${k.length?` (+${k.length})`:""}</button><button data-act="del-no">Cancelar</button></div>`
+      :`<div class="acts"><button class="edit" data-act="add-ini" aria-label="Agregar iniciativa" title="Agregar iniciativa">＋</button><button class="edit" data-act="edit" aria-label="Editar proyecto" title="Editar">✎</button><button class="del" data-act="del" aria-label="Eliminar proyecto" title="Eliminar">×</button></div>`}</td>
+  </tr>`;
+  if(open&&k.length)html+=k.map((i,n)=>iniRow(i,n===k.length-1)).join("");
+  return html;
+}
+function iniRow(i,last){
+  const K=KINDS[i.kind]||KINDS.ing,pr=iniProg(i),e=i.etapas||{},confirm=ui.confirm===i.id;
+  const meta=[i.proveedor&&`<span>Empresa <b>${esc(i.proveedor)}</b></span>`,i.oc&&`<span>OC <b>${esc(i.oc)}</b></span>`,i.responsable&&`<span>Resp. <b>${esc(i.responsable)}</b></span>`,
+    (i.inicio||i.termino)&&`<span>${fdate(i.inicio)||"…"} → ${fdate(i.termino)||"…"}</span>`].filter(Boolean).join("");
+  const stagesCell=`<td class="stepc">${stepper(K.stages,e,"data-istage")}</td>`;
+  return `<tr class="irow${last?" last":""}" data-ini="${i.id}">
+    <td class="first"><div class="iname"><div class="ih"><span class="kind ${i.kind}" title="${esc(K.t)}">${K.s}</span><b>${esc(i.nombre)}</b></div>
+      ${meta?`<div class="imeta">${meta}</div>`:""}</div></td>
+    <td><div class="tm"><div class="monto"><input type="number" inputmode="decimal" step="0.1" placeholder="—" value="${i.ppto??""}" data-if="ppto" aria-label="PPTO 2027 de ${esc(i.nombre)} en kUS$"><small>kUS$</small></div>
+      ${i.cb!=null&&i.cb!==""?`<span class="cbline">CB ${fmt(i.cb)}</span>`:""}</div></td>
+    ${stagesCell}
+    <td class="gate"></td>
+    <td>${progCell(pr)}</td>
+    <td>${confirm?`<div class="confirm"><button class="yes" data-act="idel-yes">Eliminar</button><button data-act="idel-no">Cancelar</button></div>`
+      :`<div class="acts"><button class="edit" data-act="iedit" aria-label="Editar iniciativa" title="Editar">✎</button><button class="del" data-act="idel" aria-label="Eliminar iniciativa" title="Eliminar">×</button></div>`}</td>
+  </tr>`;
+}
+function renderRows(){
+  const list=visible();
+  $("#empty").hidden=projects.length>0;
+  $("#expBtn").textContent=projects.some(p=>kidsOf(p).length&&!ui.open.has(p.id))?"Expandir todo":"Contraer todo";
+  if(projects.length&&!list.length){
+    $("#rows").innerHTML=`<tr><td colspan="6" style="padding:28px 16px;color:var(--gray)">Ningún proyecto coincide con los filtros.</td></tr>`;return;
+  }
+  $("#rows").innerHTML=list.map(projectRow).join("");
+}
+function renderAdj(){
+  const c=$("#adjCard");c.hidden=!ajustes.length;if(!ajustes.length)return;
+  const sp=projects.reduce((s,p)=>s+pMonto(p),0),sa=adjSum(null);
+  $("#adjBody").innerHTML=ajustes.map(a=>`<tr><td><b>${esc(a.nombre)}</b>${a.desc?`<div class="ref">${esc(a.desc)}</div>`:""}</td><td>${esc(a.tipo||"")}</td><td class="num neg">${fmt(a.monto)}</td></tr>`).join("")+
+    `<tr class="sub"><td colspan="2">Proyectos en la matriz</td><td class="num">${fmt(sp)}</td></tr>`+
+    `<tr class="sub"><td colspan="2">Ajustes (restas PPTO 2027)</td><td class="num neg">${fmt(sa)}</td></tr>`+
+    `<tr class="tot"><td colspan="2">Total cartera PPTO 2027 · cuadra con CB 2027</td><td class="num">${fmt(sp+sa)}</td></tr>`;
+}
+function render(){renderSummary();renderRows();renderAdj();renderFin();renderCos();}
+
+/* ---------- escrituras ---------- */
+const now=()=>new Date().toISOString();
+function patchLocal(o,patch){for(const k in patch){if(k==="etapas"||k==="gates"||k==="plan")o[k]={...(o[k]||{}),...patch[k]};else o[k]=patch[k];}o.actualizado=now();}
+function save(id,patch){const p=projects.find(x=>x.id===id);if(!p)return;patchLocal(p,patch);render();store.upd("proyectos",id,{...patch,actualizado:p.actualizado});}
+function saveIni(id,patch){const i=inis.find(x=>x.id===id);if(!i)return;patchLocal(i,patch);render();store.upd("iniciativas",id,{...patch,actualizado:i.actualizado});}
+function createProject(f){
+  const data={...f,etapas:{},gates:{},orden:Date.now(),actualizado:now()},id=store.newId();
+  projects.push({id,...data});render();store.add("proyectos",id,data);
+}
+function createIni(f){
+  const data={...f,etapas:{},orden:Date.now(),actualizado:now()},id=store.newId();
+  inis.push({id,...data});ui.open.add(f.proyectoId);saveUi();render();store.add("iniciativas",id,data);
+}
+function removeProject(id){
+  ui.confirm=null;const k=inis.filter(i=>i.proyectoId===id);
+  projects=projects.filter(p=>p.id!==id);inis=inis.filter(i=>i.proyectoId!==id);render();
+  k.forEach(i=>store.del("iniciativas",i.id));store.del("proyectos",id);
+}
+function removeIni(id){ui.confirm=null;inis=inis.filter(i=>i.id!==id);render();store.del("iniciativas",id);}
+function addProject(){openForm();}
+
+/* ---------- eventos ---------- */
+function toggle(pid){ui.open.has(pid)?ui.open.delete(pid):ui.open.add(pid);saveUi();renderRows();}
+$("#rows").addEventListener("click",e=>{
+  const tr=e.target.closest("tr");if(!tr)return;
+  if(tr.dataset.ini){
+    const id=tr.dataset.ini;
+    const st=e.target.closest(".st");if(st){openPop(st,id,st.dataset.istage,"ini");return;}
+    const a=e.target.closest("[data-act]");if(!a)return;
+    if(a.dataset.act==="iedit")openIniForm(id);
+    if(a.dataset.act==="idel"){ui.confirm=id;renderRows();}
+    if(a.dataset.act==="idel-no"){ui.confirm=null;renderRows();}
+    if(a.dataset.act==="idel-yes")removeIni(id);
+    return;
+  }
+  if(!tr.dataset.id)return;const id=tr.dataset.id;
+  const st=e.target.closest(".st");if(st){openPop(st,id,st.dataset.stage);return;}
+  const gc=e.target.closest(".gch");if(gc){openPop(gc,id,gc.dataset.gate,"gates");return;}
+  const tb=e.target.closest("[data-tipo]");if(tb){const p=projects.find(x=>x.id===id);save(id,{tipo:p.tipo===tb.dataset.tipo?"":tb.dataset.tipo});return;}
+  const a=e.target.closest("[data-act]");if(!a)return;
+  if(a.dataset.act==="add-ini"){e.stopPropagation();openIniForm(null,id);return;}
+  if(a.dataset.act==="toggle"){if(kidsOf(projects.find(x=>x.id===id)||{}).length)toggle(id);return;}
+  if(a.dataset.act==="edit"){openForm(id);return;}
+  if(a.dataset.act==="del"){ui.confirm=id;renderRows();}
+  if(a.dataset.act==="del-no"){ui.confirm=null;renderRows();}
+  if(a.dataset.act==="del-yes")removeProject(id);
+});
+$("#rows").addEventListener("change",e=>{
+  const ii=e.target.closest("[data-if]");
+  if(ii){const id=ii.closest("tr").dataset.ini,v=ii.value===""?null:Number(ii.value);const i=inis.find(x=>x.id===id);if(i&&i.ppto!==v)saveIni(id,{ppto:v});return;}
+  const el=e.target.closest("[data-f]");if(!el)return;const id=el.closest("tr").dataset.id;
+  const f=el.dataset.f;let v=el.value;
+  if(f==="monto")v=v===""?null:Number(v);
+  if(f==="nombre"){v=v.trim()||"Sin nombre";}
+  const p=projects.find(x=>x.id===id);if(p&&p[f]===v)return;
+  save(id,{[f]:v});
+});
+$("#rows").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input"))e.target.blur();});
+$("#fTipo").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ui.tipo=b.dataset.v;
+  document.querySelectorAll("#fTipo button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));saveUi();renderRows();});
+$("#fFase").addEventListener("change",e=>{ui.fase=e.target.value;saveUi();renderRows();});
+$("#fQ").addEventListener("input",e=>{ui.q=e.target.value;renderRows();});
+$("#fHide").addEventListener("change",e=>{ui.hide=e.target.checked;saveUi();renderRows();});
+$("#expBtn").addEventListener("click",()=>{const withK=projects.filter(p=>kidsOf(p).length);
+  const anyClosed=withK.some(p=>!ui.open.has(p.id));ui.open.clear();if(anyClosed)withK.forEach(p=>ui.open.add(p.id));saveUi();renderRows();});
+$("#addBtn").addEventListener("click",()=>addProject());
+$("#addIniBtn").addEventListener("click",()=>openIniForm(null,null));
+
+/* popover de estado */
+let pop=null;
+function closePop(){if(pop){pop.remove();pop=null;}}
+function openPop(btn,id,stage,kind){
+  closePop();
+  let obj,cur,S,stages;
+  if(kind==="ini"){obj=inis.find(x=>x.id===id);stages=(KINDS[obj.kind]||KINDS.ing).stages;S=stages.find(s=>s.k===stage);cur=(obj.etapas||{})[stage]||"pend";}
+  else if(kind==="gates"){obj=projects.find(x=>x.id===id);S=gatesOf(obj).find(g=>g.key===stage)||{t:stage};cur=(obj.gates||{})[stage]||"pend";}
+  else{obj=projects.find(x=>x.id===id);stages=STAGES;S=STAGES.find(s=>s.k===stage);cur=(obj.etapas||{})[stage]||"pend";}
+  pop=document.createElement("div");pop.className="pop";pop.setAttribute("role","menu");
+  pop.innerHTML=`<div class="h">${kind==="ini"?`<div style="font-weight:normal;text-transform:none;letter-spacing:0;color:var(--gray);margin-bottom:2px">${esc(obj.nombre)}</div>`:""}${esc(S.t)}${kind==="gates"&&S.req?`<div style="font-weight:normal;text-transform:none;letter-spacing:0;color:var(--gray);margin-top:2px">${S.req}</div>`:""}</div>`+
+    STATES.map(s=>`<button role="menuitem" data-s="${s.k}" class="${s.k===cur?"cur":""}"><span class="ic st ${s.cls}" style="width:20px;height:20px">${ICON[s.k]}</span>${s.t}</button>`).join("");
+  document.body.appendChild(pop);
+  const r=btn.getBoundingClientRect(),pw=pop.offsetWidth,ph=pop.offsetHeight;
+  pop.style.left=Math.min(Math.max(8,r.left+r.width/2-pw/2),innerWidth-pw-8)+"px";
+  let top=r.bottom+6;if(top+ph>innerHeight-8)top=r.top-ph-6;pop.style.top=top+"px";
+  pop.addEventListener("click",ev=>{const b=ev.target.closest("[data-s]");if(!b)return;
+    closePop();const v=b.dataset.s;
+    if(kind==="gates"){save(id,{gates:{[stage]:v}});return;}
+    const etapas={[stage]:v};
+    // un solo "foco" por proyecto o iniciativa
+    if(v==="pin")stages.forEach(s=>{if(s.k!==stage&&(obj.etapas||{})[s.k]==="pin")etapas[s.k]="pend";});
+    kind==="ini"?saveIni(id,{etapas}):save(id,{etapas});
+  });
+  (pop.querySelector(".cur")||pop.querySelector("button")).focus();
+}
+document.addEventListener("click",e=>{if(pop&&!pop.contains(e.target)&&!e.target.closest(".st")&&!e.target.closest(".gch"))closePop();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closePop();});
+addEventListener("scroll",closePop,true);
+
+let tt;function toast(m){let t=$(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t);}t.textContent=m;clearTimeout(tt);tt=setTimeout(()=>t.remove(),3500);}
+
+/* Hitos de calidad ADS por fase (ADS-PM-008 Manual FQAR, ADS-TK-063 Checkpoint FEL 2A) */
+const GATES={
+  Perfil:[{k:"fqar",t:"FQAR Perfil"}],
+  PFS:[{k:"fel2a",t:"Checkpoint FEL 2A",always:1},{k:"fqar",t:"FQAR Prefactibilidad"}],
+  FS:[{k:"fqar",t:"FQAR Factibilidad"}],
+  DET:[{k:"fqar",t:"FQAR Aprobación (65% ID)"}],
+  EJE:[{k:"h1",t:"FQAR Hito 1 · movilización"},{k:"h2",t:"FQAR Hito 2 · término ing."},{k:"h3",t:"FQAR Hito 3 · cierre"}]
+};
+function gatesOf(p){
+  const m=pMonto(p);
+  return (GATES[p.fase]||[]).map(g=>{
+    const key=p.fase+":"+g.k, v=(p.gates||{})[key]||"pend";
+    const req=g.always?"Obligatorio":(m>50000?"Obligatorio (>50 MUS$)":"Según Compañía (≤50 MUS$)");
+    return {...g,key,v,req,oblig:!!g.always||m>50000};
+  });
+}
+const ICON_S={
+  pend:'<svg width="12" height="12" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+  run:'<svg width="12" height="12" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7" fill="currentColor"/></svg>',
+  pin:'<svg width="10" height="13" viewBox="0 0 16 20"><path d="M8 11v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="8" cy="6.5" r="5" fill="currentColor"/></svg>',
+  ok:'<svg width="13" height="13" viewBox="0 0 20 20"><rect x="1.5" y="1.5" width="17" height="17" rx="3.5" fill="currentColor"/><path d="M5.6 10.2l3 3 5.8-6.4" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+
+
+/* ---------- flujos financieros (plan mensual) ---------- */
+const MESES=(()=>{const a=[];for(let y=2026,m=10;y<2027||(y===2027&&m<=12);){a.push(`${y}-${String(m).padStart(2,"0")}`);m++;if(m>12){m=1;y++;}}return a;})();
+const MN=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const mLabel=k=>MN[+k.slice(5)-1];
+const mLong=k=>MN[+k.slice(5)-1]+"-"+k.slice(2,4);
+const NOWK=(()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;})();
+const M27=MESES.filter(k=>k.startsWith("2027")),M26=MESES.filter(k=>k.startsWith("2026"));
+/* partidas: cada iniciativa, o el proyecto completo si no tiene iniciativas */
+function partidas(){
+  const out=[];
+  projects.forEach(p=>{const k=kidsOf(p);
+    if(k.length){out.push({head:true,p,kids:k});k.forEach(i=>out.push({kind:"ini",id:i.id,o:i,p,nombre:i.nombre,ppto:num(i.ppto)}));}
+    else out.push({kind:"proy",id:p.id,o:p,p,nombre:p.nombre,ppto:pMonto(p),solo:true});
+  });
+  return out;
+}
+const planOf=o=>o.plan||{};
+const sumKeys=(o,keys)=>keys.reduce((s,k)=>s+num(planOf(o)[k]),0);
+function monthTotals(){const leaves=partidas().filter(x=>!x.head);return MESES.map(k=>leaves.reduce((s,x)=>s+num(planOf(x.o)[k]),0));}
+
+function renderFin(){
+  if($("#tabFin").hidden)return;
+  $("#xlsBtn2").hidden=$("#xlsBtn").hidden;
+  const parts=partidas(),leaves=parts.filter(x=>!x.head);
+  const mt=monthTotals(),tot27=M27.reduce((s,k)=>s+mt[MESES.indexOf(k)],0),tot26=M26.reduce((s,k)=>s+mt[MESES.indexOf(k)],0);
+  const ppto=leaves.reduce((s,x)=>s+x.ppto,0),dif=+(tot27-ppto).toFixed(1);
+  const iNow=MESES.indexOf(NOWK),acum=iNow>=0?mt.slice(0,iNow+1).reduce((a,b)=>a+b,0):0;
+  const sinPlan=leaves.filter(x=>!MESES.some(k=>num(planOf(x.o)[k]))).length;
+  $("#finKpi").innerHTML=`
+    <div class="chip total"><div class="lab">PPTO 2027</div><div class="num">${fmt(ppto)}<small>kUS$</small></div><div class="sub">${leaves.length} partidas · sin ajustes de cartera</div></div>
+    <div class="chip"><div class="lab">Plan 2027</div><div class="num n-capex">${fmt(tot27)}<small>kUS$</small></div><div class="sub">ene a dic 2027</div></div>
+    <div class="chip"><div class="lab">Cuadre plan vs PPTO</div><div class="num ${dif?"n-red":""}" style="${dif?"":"color:var(--green)"}">${dif?fmt(dif):"✓ 0"}</div><div class="sub">${dif>0?"Plan excede el PPTO":dif<0?"Falta planificar":"Plan 2027 cuadra con PPTO"}</div></div>
+    <div class="chip"><div class="lab">Plan oct–dic 2026</div><div class="num">${fmt(tot26)}<small>kUS$</small></div><div class="sub">acumulado a ${mLong(NOWK)}: ${fmt(acum)}</div></div>
+    <div class="chip"><div class="lab">Partidas sin plan</div><div class="num" style="color:var(--gold)">${sinPlan}</div><div class="sub">de ${leaves.length} partidas</div></div>`;
+  renderCurve(mt);
+  // tabla
+  const head=`<colgroup><col style="width:230px"><col style="width:72px">${MESES.map(()=>"<col>").join("")}<col style="width:78px"><col style="width:72px"></colgroup>
+    <thead><tr class="yr"><th class="nm" rowspan="2" style="vertical-align:bottom">Proyecto / iniciativa</th><th class="pp" rowspan="2" style="vertical-align:bottom">PPTO 2027</th>
+      <th colspan="${M26.length}">2026</th><th colspan="${M27.length}">2027</th><th class="tt" rowspan="2" style="vertical-align:bottom">Total 2027</th><th rowspan="2" style="vertical-align:bottom">Dif. vs PPTO</th></tr>
+    <tr class="ms">${MESES.map(k=>`<th class="${k===NOWK?"now":""}" title="${mLong(k)}">${mLabel(k)}</th>`).join("")}</tr></thead>`;
+  const cells=(o,kind)=>MESES.map(k=>{const v=planOf(o)[k];return `<td class="m ${k===NOWK?"now":""}"><input type="number" step="0.1" inputmode="decimal" placeholder="·" value="${v??""}" data-plan="${k}" data-pk="${kind}" data-pid="${o.id}" aria-label="Plan ${mLong(k)} ${esc(o.nombre)}"></td>`}).join("");
+  const difCell=(t,p)=>{const d=+(t-p).toFixed(1);return `<td class="dif ${t===0?"":d?"bad":"ok"}">${t===0?"—":d?fmt(d):"✓"}</td>`;};
+  let rows="";
+  parts.forEach(x=>{
+    if(x.head){const k=x.kids,sums=MESES.map(m=>k.reduce((s,i)=>s+num(planOf(i)[m]),0)),t27=M27.reduce((s,m)=>s+sums[MESES.indexOf(m)],0),pp=k.reduce((s,i)=>s+num(i.ppto),0);
+      rows+=`<tr class="fp"><td class="nm" title="${esc(x.p.nombre)}">${esc(x.p.nombre)}</td><td class="pp">${fmt(pp)}</td>${sums.map((v,j)=>`<td class="${MESES[j]===NOWK?"now":""}">${v?fmt(v):""}</td>`).join("")}<td class="tt">${fmt(t27)}</td>${difCell(t27,pp)}</tr>`;return;}
+    const t27=sumKeys(x.o,M27);
+    rows+=`<tr class="${x.solo?"fp fsolo":"fk"}"><td class="nm" title="${esc(x.nombre)}">${x.kind==="ini"?`<span class="kdot ${x.o.kind}" style="display:inline-block;margin-right:6px"></span>`:""}${esc(x.nombre)}</td><td class="pp">${fmt(x.ppto)}</td>${cells(x.o,x.kind)}<td class="tt">${fmt(t27)}</td>${difCell(t27,x.ppto)}</tr>`;
+  });
+  rows+=`<tr class="ftot"><td class="nm">Total cartera</td><td class="pp">${fmt(ppto)}</td>${mt.map((v,j)=>`<td>${v?fmt(v):""}</td>`).join("")}<td class="tt">${fmt(tot27)}</td>${difCell(tot27,ppto)}</tr>`;
+  const ae=document.activeElement,keep=ae&&ae.dataset&&ae.dataset.plan?[ae.dataset.pid,ae.dataset.plan]:null;
+  $("#finTable").innerHTML=head+`<tbody>${rows}</tbody>`;
+  if(keep){const el=document.querySelector(`#finTable input[data-pid="${keep[0]}"][data-plan="${keep[1]}"]`);if(el)el.focus();}
+}
+function renderCurve(mt){
+  const box=$("#curve"),any=mt.some(v=>v);
+  let acc=0;const cum=mt.map(v=>acc+=v);
+  $("#curveSub").textContent=any?`Total oct-26 a dic-27: ${fmt(acc)} kUS$`:"";
+  if(!any){box.innerHTML=`<div class="cempty">Aún no hay plan mensual cargado. Envíame la planilla con el plan o escribe los montos en la tabla de abajo.</div>`;return;}
+  const W=960,H=240,L=58,R=18,T=16,B=30,n=MESES.length,max=Math.max(...cum)*1.08||1;
+  const x=i=>L+(W-L-R)*i/(n-1),y=v=>T+(H-T-B)*(1-v/max);
+  const ticks=4,step=Math.pow(10,Math.floor(Math.log10(max/ticks)));const nice=[1,2,2.5,5,10].map(f=>f*step).find(s=>max/s<=ticks+1)||step*10;
+  let grid="";for(let v=0;v<=max;v+=nice)grid+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#E2E7EA" stroke-width="1"/><text x="${L-8}" y="${y(v)+3.5}" text-anchor="end" font-size="10" fill="#8A97A0">${fmt(v)}</text>`;
+  const pts=cum.map((v,i)=>`${x(i)},${y(v)}`).join(" ");
+  const area=`M${x(0)},${y(0)} L${pts.replace(/ /g," L")} L${x(n-1)},${y(0)} Z`;
+  const iNow=MESES.indexOf(NOWK);
+  const xl=MESES.map((k,i)=>`<text x="${x(i)}" y="${H-10}" text-anchor="middle" font-size="10" fill="${k===NOWK?"#00778B":"#8A97A0"}" font-weight="${k===NOWK?"bold":"normal"}">${mLabel(k)}${k.endsWith("-01")||i===0?"·"+k.slice(2,4):""}</text>`).join("");
+  const sep=`<line x1="${(x(2)+x(3))/2}" x2="${(x(2)+x(3))/2}" y1="${T}" y2="${H-B}" stroke="#E2E7EA" stroke-dasharray="3 3"/>`;
+  const now=iNow>=0?`<line x1="${x(iNow)}" x2="${x(iNow)}" y1="${T}" y2="${H-B}" stroke="#64CCC9" stroke-width="2"/><text x="${x(iNow)+5}" y="${T+10}" font-size="10" fill="#00778B" font-weight="bold">Hoy</text>`:"";
+  const last=cum[n-1];
+  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Curva S del plan acumulado, de ${fmt(0)} a ${fmt(last)} kUS$">
+    ${grid}${sep}<path d="${area}" fill="#00778B" fill-opacity=".08"/>${now}
+    <polyline points="${pts}" fill="none" stroke="#00778B" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${x(n-1)}" cy="${y(last)}" r="4" fill="#00778B" stroke="#fff" stroke-width="2"/>
+    <text x="${x(n-1)-8}" y="${y(last)-10}" text-anchor="end" font-size="11" font-weight="bold" fill="#253746">Plan ${fmt(last)}</text>
+    ${xl}
+    <line id="cx" x1="0" x2="0" y1="${T}" y2="${H-B}" stroke="#8A97A0" stroke-width="1" visibility="hidden"/>
+    <circle id="cd" r="4.5" fill="#00778B" stroke="#fff" stroke-width="2" visibility="hidden"/>
+    <rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}" fill="transparent" id="chit"/></svg><div class="tip" hidden></div>`;
+  const svg=box.querySelector("svg"),tip=box.querySelector(".tip"),cx=svg.querySelector("#cx"),cd=svg.querySelector("#cd");
+  const move=ev=>{const r=svg.getBoundingClientRect(),px=(ev.clientX-r.left)*W/r.width;
+    const i=Math.max(0,Math.min(n-1,Math.round((px-L)/(W-L-R)*(n-1))));
+    cx.setAttribute("x1",x(i));cx.setAttribute("x2",x(i));cx.setAttribute("visibility","visible");
+    cd.setAttribute("cx",x(i));cd.setAttribute("cy",y(cum[i]));cd.setAttribute("visibility","visible");
+    tip.hidden=false;tip.style.left=(x(i)*r.width/W)+"px";tip.style.top=(y(cum[i])*r.height/H)+"px";
+    tip.innerHTML=`<b>${mLong(MESES[i])}</b>Plan del mes: ${fmt(mt[i])} kUS$<br>Acumulado: ${fmt(cum[i])} kUS$`;};
+  svg.querySelector("#chit").addEventListener("pointermove",move);
+  svg.querySelector("#chit").addEventListener("pointerleave",()=>{tip.hidden=true;cx.setAttribute("visibility","hidden");cd.setAttribute("visibility","hidden");});
+}
+$("#xlsBtn2").addEventListener("click",()=>$("#xlsBtn").click());
+$("#finTable").addEventListener("change",e=>{
+  const el=e.target.closest("[data-plan]");if(!el)return;
+  const v=el.value===""?null:Number(el.value),k=el.dataset.plan,id=el.dataset.pid;
+  el.dataset.pk==="ini"?saveIni(id,{plan:{[k]:v}}):save(id,{plan:{[k]:v}});
+});
+$("#finTable").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input")){e.preventDefault();e.target.blur();}});
+/* pestañas */
+function setTab(t){
+  document.querySelectorAll(".tabs [data-tab]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===t)));
+  $("#tabEnt").hidden=t!=="ent";$("#tabFin").hidden=t!=="fin";$("#tabCos").hidden=t!=="cos";
+  try{localStorage.setItem("gpro-tab",t)}catch(e){}
+  if(t==="fin")renderFin();if(t==="cos")renderCos();
+}
+document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)setTab(b.dataset.tab);});
+
+
+/* ---------- control de costos: 9 columnas (PCS-PR-015) con ítems desplegables ---------- */
+const CLINES=[{k:"ing",t:"Ingeniería"},{k:"con",t:"Construcción"},{k:"adq",t:"Adquisiciones"},{k:"own",t:"Owner"}];
+const CCONT=[{k:"cont",t:"Contingencia (15%)"},{k:"tc",t:"Ajuste TC base"}];
+const CALL=[...CLINES,...CCONT];
+const CCOLS=[
+  {k:"base",h:"Ppto base",n:1,t:"Presupuesto base"},
+  {k:"camb",h:"Cambios / transf.",n:2,t:"Cambios de alcance y transferencias"},
+  {k:"apr",h:"Ppto aprobado",n:3,t:"Presupuesto aprobado",calc:1},
+  {k:"cp",h:"Compromiso período",n:4,t:"Compromiso del período"},
+  {k:"ca",h:"Compromiso acumulado",n:5,t:"Compromiso acumulado"},
+  {k:"ip",h:"Incurrido período",n:6,t:"Costo incurrido del período"},
+  {k:"ia",h:"Incurrido acumulado",n:7,t:"Costo incurrido acumulado"},
+  {k:"eac",h:"EAC",n:8,t:"EAC (estimado a término)"},
+  {k:"var",h:"Variación EAC",n:9,t:"Variación EAC vs aprobado",calc:1}
+];
+const FKEYS=["CY26",...M27,"CY28"];      // columnas del flujo de costos
+let cosSel=null,cosView="part";const cosOpen=new Set();
+try{cosSel=localStorage.getItem("gpro-cos");cosView=localStorage.getItem("gpro-cosv")||"part";JSON.parse(localStorage.getItem("gpro-coso")||"[]").forEach(x=>cosOpen.add(x));}catch(e){}
+const saveOpen=()=>{try{localStorage.setItem("gpro-coso",JSON.stringify([...cosOpen]))}catch(e){}};
+const perLabel=p=>p?MN[+p.slice(5)-1]+"-"+p.slice(0,4):"sin período";
+/* ítems: {id,line,parent,group,nombre,cant,unidad,meses,ppto,c:{camb,cp,ca,ip,ia,eac},flujo:{},orden} */
+const itemsOf=(r,line,parent=null)=>((r&&r.items)||[]).filter(i=>i.line===line&&(i.parent||null)===parent).sort((a,b)=>(a.orden||0)-(b.orden||0));
+const hasItems=(r,line)=>((r&&r.items)||[]).some(i=>i.line===line);
+function leafVal(i,col){const c=i.c||{};
+  if(col==="base")return num(i.ppto);if(col==="apr")return num(i.ppto)+num(c.camb);
+  if(col==="eac")return c.eac==null||c.eac===""?leafVal(i,"apr"):num(c.eac);
+  if(col==="var")return leafVal(i,"eac")-leafVal(i,"apr");return num(c[col]);}
+function ival(r,i,col){return i.group?itemsOf(r,i.line,i.id).reduce((s,x)=>s+ival(r,x,col),0):leafVal(i,col);}
+function iflow(r,i,k){return i.group?itemsOf(r,i.line,i.id).reduce((s,x)=>s+iflow(r,x,k),0):num((i.flujo||{})[k]);}
+function cval(r,line,col){
+  if(hasItems(r,line))return itemsOf(r,line).reduce((s,i)=>s+ival(r,i,col),0);
+  const L=((r&&r.lines)||{})[line]||{};
+  if(col==="apr")return num(L.base)+num(L.camb);
+  if(col==="eac")return L.eac==null||L.eac===""?cval(r,line,"apr"):num(L.eac);
+  if(col==="var")return cval(r,line,"eac")-cval(r,line,"apr");
+  return num(L[col]);
+}
+function lflow(r,line,k){return hasItems(r,line)?itemsOf(r,line).reduce((s,i)=>s+iflow(r,i,k),0):num(((((r&&r.lines)||{})[line]||{}).flujo||{})[k]);}
+const csum=(r,lines,col)=>lines.reduce((s,l)=>s+cval(r,l.k,col),0);
+const n0=v=>Math.abs(v)>0.05?fmt(v):"—";
+/* selector: un reporte por proyecto de la matriz + proyectos externos */
+function cosOptions(){
+  const opts=projects.map(p=>{const r=costos.find(c=>c.proyectoId===p.id);return {v:r?r.id:"p:"+p.id,t:p.nombre,r,p};});
+  costos.filter(c=>!c.proyectoId||!projects.some(p=>p.id===c.proyectoId)).forEach(r=>opts.push({v:r.id,t:r.nombre,r,p:null,ext:true}));
+  return opts;
+}
+function curCos(){const opts=cosOptions();if(!opts.length)return null;
+  let o=opts.find(x=>x.v===cosSel)||opts.find(x=>x.p&&"p:"+x.p.id===cosSel);if(!o)o=opts.find(x=>x.r)||opts[0];cosSel=o.v;return o;}
+function ensureCos(o){
+  if(o.r)return o.r.id;
+  const data={nombre:o.p.nombre,proyectoId:o.p.id,pep:o.p.pep||"",periodo:NOWK,lines:{},items:[],orden:Date.now(),actualizado:now()},id=store.newId();
+  costos.push({id,...data});store.add("costos",id,data);cosSel=id;o.r=costos.find(c=>c.id===id);o.v=id;
+  try{localStorage.setItem("gpro-cos",id)}catch(_){}return id;
+}
+const tog=(key,open,label)=>`<button class="tog sm" data-ctog="${key}" aria-expanded="${open}" aria-label="${open?"Contraer":"Expandir"} ${esc(label)}">${open?"▾":"▸"}</button>`;
+const itActs=i=>ui.confirm===i.id?`<span class="confirm"><button class="yes" data-iact="del-yes" data-iid="${i.id}">Eliminar${i.group?" grupo":""}</button><button data-iact="del-no">No</button></span>`
+  :`<span class="iacts">${i.group?`<button data-iact="add" data-iid="${i.id}" title="Agregar ítem al grupo">＋</button>`:""}<button data-iact="edit" data-iid="${i.id}" title="Editar">✎</button><button data-iact="del" data-iid="${i.id}" class="x" title="Eliminar">×</button></span>`;
+const cosYears=new Set();try{JSON.parse(localStorage.getItem("gpro-cosy")||"[]").forEach(x=>cosYears.add(x));}catch(e){}
+function renderCos(){
+  if($("#tabCos").hidden)return;
+  $("#xlsBtn3").hidden=$("#xlsBtn").hidden;
+  const opts=cosOptions(),o=curCos(),has=!!o;
+  $("#cosEmpty").hidden=has;$("#cosKpi").hidden=!has;$("#cosTable").closest(".card").hidden=!has;
+  $("#cosSel").innerHTML=opts.filter(x=>!x.ext).map(x=>`<option value="${x.v}">${esc(x.t)}${x.r?"":" · sin datos"}</option>`).join("")+
+    (opts.some(x=>x.ext)?`<optgroup label="Otros proyectos">${opts.filter(x=>x.ext).map(x=>`<option value="${x.v}">${esc(x.t)}</option>`).join("")}</optgroup>`:"");
+  if(!has)return;
+  $("#cosSel").value=o.v;$("#cosRen").hidden=!o.ext;
+  const r=o.r||{nombre:o.t,lines:{},items:[]};
+  if(document.activeElement!==$("#cosPer"))$("#cosPer").value=r.periodo||NOWK;
+  const anyIt=(r.items||[]).length>0;$("#cosExp").hidden=!anyIt;
+  const allKeys=[...CALL.filter(l=>hasItems(r,l.k)).map(l=>"L:"+l.k),...(r.items||[]).filter(i=>i.group).map(i=>i.id)];
+  $("#cosExp").textContent=allKeys.some(k=>!cosOpen.has(k))?"Expandir todo":"Contraer todo";
+  const T=c=>csum(r,CALL,c),apr=T("apr"),eac=T("eac"),vr=eac-apr;
+  const pct=(a,b)=>b?Math.round(a/b*100)+"%":"—";
+  $("#cosKpi").innerHTML=`
+    <div class="chip total"><div class="lab">Presupuesto aprobado</div><div class="num">${fmt(apr)}<small>kUS$</small></div><div class="sub">${esc(r.nombre)}${r.pep?" · "+esc(r.pep):""} · ${perLabel(r.periodo||NOWK)}</div></div>
+    <div class="chip"><div class="lab">Comprometido acumulado</div><div class="num n-capex">${fmt(T("ca"))}<small>kUS$</small></div><div class="sub">${pct(T("ca"),apr)} del aprobado · período ${fmt(T("cp"))}</div></div>
+    <div class="chip"><div class="lab">Incurrido acumulado</div><div class="num">${fmt(T("ia"))}<small>kUS$</small></div><div class="sub">${pct(T("ia"),apr)} del aprobado · período ${fmt(T("ip"))}</div></div>
+    <div class="chip"><div class="lab">EAC</div><div class="num">${fmt(eac)}<small>kUS$</small></div><div class="sub">estimado a término</div></div>
+    <div class="chip"><div class="lab">Variación EAC</div><div class="num ${vr>0.05?"n-red":""}" style="${vr>0.05?"":"color:var(--green)"}">${Math.abs(vr)>0.05?fmt(vr):"0"}</div><div class="sub">${vr>0.05?"Sobrecosto vs aprobado":vr<-0.05?"Bajo el aprobado":"En línea con el aprobado"}</div></div>`;
+  const vcls=v=>v>0.05?"vbad":v<-0.05?"vok":"";
+  const open27=cosYears.has("2027");
+  /* columnas de flujo: CY26 · [meses 2027 si está abierto] · CY27 · CY28 */
+  const FCOLS=[{k:"CY26",cy:1},...(open27?M27.map(k=>({k,m:1})):[]),{k:"CY27",calc:1,cy:1},{k:"CY28",cy:1}];
+  const nF=FCOLS.length;
+  const colg=`<colgroup><col class="cd"><col span="9" class="c9">${FCOLS.map(c=>`<col class="${c.m?"cm":"cy"}">`).join("")}<col class="ctt"><col class="ccal"></colgroup>`;
+  const head=`${colg}<thead>
+    <tr class="grp"><th class="d" rowspan="2">Descripción</th><th colspan="9" class="g9">Estado de costos · 9 columnas</th><th colspan="${nF}" class="gf">Flujo mensual · kUS$</th><th rowspan="2" class="tt">Total CAPEX</th><th rowspan="2" class="tt">Calce</th></tr>
+    <tr class="sub">${CCOLS.map(c=>`<th class="${c.calc?"calc":""}" title="${esc(c.t)}"><small>${c.n}</small>${esc(c.h||c.t)}</th>`).join("")}${FCOLS.map(c=>c.k==="CY27"
+      ?`<th class="fy"><button class="ytog" data-ytog="2027" aria-expanded="${open27}" title="${open27?"Agrupar":"Ver meses de"} 2027">${open27?"◂":"▸"} CY27</button></th>`
+      :`<th class="${c.m?"fm":"fy"} ${c.k===NOWK?"now":""}">${c.m?mLabel(c.k).toLowerCase()+"-"+c.k.slice(2,4):c.k}</th>`).join("")}</tr></thead>`;
+  const rnd=v=>v==null||v===""?"":Math.round(Number(v)*10)/10;
+  const inp=(v,attrs,ph,lab)=>`<td class="m"><input type="number" step="any" inputmode="decimal" value="${rnd(v)}" placeholder="${ph}" ${attrs} aria-label="${esc(lab)}"></td>`;
+  const calce=d=>`<td class="cal ${Math.abs(d)<0.5?"ok":"bad"}" title="${Math.abs(d)<0.5?"El flujo calza con el presupuesto":d>0?"Falta distribuir":"El flujo excede el presupuesto"}">${Math.abs(d)<0.5?"✓":fmt(d)}</td>`;
+  /* celdas de flujo: get(k) devuelve el valor; edit(k) devuelve atributos del input o null si se calcula */
+  const flowCells=(get,edit,raw,lab)=>FCOLS.map(c=>{
+    const cls=`${c.m?"fm":"fy"} ${c.k===NOWK?"now":""}`;
+    if(c.k==="CY27"){const v=M27.reduce((s,m)=>s+get(m),0);return `<td class="${cls} c">${n0(v)}</td>`;}
+    if(edit)return `<td class="m ${cls}"><input type="number" step="any" inputmode="decimal" value="${rnd(raw(c.k))}" placeholder="·" ${edit(c.k)} aria-label="${esc(lab)} ${c.k}"></td>`;
+    return `<td class="${cls}">${n0(get(c.k))}</td>`;}).join("");
+  const flowTot=get=>FKEYS.reduce((s,k)=>s+get(k),0);
+  const lineRow=(l,cls)=>{const it=hasItems(r,l.k),open=cosOpen.has("L:"+l.k),L=(r.lines||{})[l.k]||{},get=k=>lflow(r,l.k,k),pp=cval(r,l.k,"apr");
+    let h=`<tr class="${cls}"><td class="d"><span class="dd">${it?tog("L:"+l.k,open,l.t):`<span class="tsp"></span>`}${esc(l.t)}${it?`<span class="icount">${itemsOf(r,l.k).length}</span>`:""}<button class="addit" data-addline="${l.k}" title="Agregar ítem a ${esc(l.t)}">＋</button></span></td>`+
+      CCOLS.map(c=>{if(c.calc||it){const v=cval(r,l.k,c.k);return `<td class="c ${c.k==="var"?vcls(v):""}">${n0(v)}</td>`;}
+        return inp(L[c.k],`data-cl="${l.k}" data-cc="${c.k}"`,c.k==="eac"?fmt(cval(r,l.k,"apr")):"·",`${l.t} · ${c.t}`);}).join("")+
+      flowCells(get,it?null:k=>`data-fl="${l.k}" data-fk="${k}"`,k=>(L.flujo||{})[k],l.t)+`<td class="tt">${n0(flowTot(get))}</td>${calce(pp-flowTot(get))}</tr>`;
+    if(it&&open)h+=itemsOf(r,l.k).map(i=>itemRow(i,1)).join("");
+    return h;};
+  const itemRow=(i,depth)=>{const open=cosOpen.has(i.id),get=k=>iflow(r,i,k),pp=ival(r,i,"apr");
+    const tip=[i.nombre,i.cant?fmt(i.cant)+" "+(i.unidad||""):"",i.meses?i.meses+" meses":""].filter(Boolean).join(" · ");
+    let h=`<tr class="irw${i.group?" igrp":""}"><td class="d"><span class="dd" style="padding-left:${depth*16}px">${i.group?tog(i.id,open,i.nombre):`<span class="tsp"></span>`}<span class="inm" title="${esc(tip)}">${esc(i.nombre)}</span>${!i.group&&(i.cant||i.meses)?`<span class="iq">${i.cant?fmt(i.cant)+" "+esc(i.unidad||""):""}${i.cant&&i.meses?" · ":""}${i.meses?i.meses+"m":""}</span>`:""}${itActs(i)}</span></td>`+
+      CCOLS.map(c=>{const v=ival(r,i,c.k);
+        if(i.group||c.calc)return `<td class="c ${c.k==="var"?vcls(v):""}">${n0(v)}</td>`;
+        if(c.k==="base")return inp(i.ppto,`data-iid="${i.id}" data-ic="ppto"`,"·",`${i.nombre} · ppto`);
+        return inp((i.c||{})[c.k],`data-iid="${i.id}" data-ic="${c.k}"`,c.k==="eac"?fmt(leafVal(i,"apr")):"·",`${i.nombre} · ${c.t}`);}).join("")+
+      flowCells(get,i.group?null:k=>`data-iid="${i.id}" data-fk="${k}"`,k=>(i.flujo||{})[k],i.nombre)+`<td class="tt">${n0(flowTot(get))}</td>${calce(pp-flowTot(get))}</tr>`;
+    if(i.group&&open)h+=itemsOf(r,i.line,i.id).map(x=>itemRow(x,depth+1)).join("");
+    return h;};
+  const sumRow=(lab,lines,cls)=>{const get=k=>lines.reduce((s,l)=>s+lflow(r,l.k,k),0),pp=csum(r,lines,"apr");
+    return `<tr class="${cls}"><td class="d">${lab}</td>${CCOLS.map(c=>{const v=csum(r,lines,c.k);return `<td class="${c.k==="var"?vcls(v):""}">${n0(v)}</td>`;}).join("")}${flowCells(get,null,null,lab)}<td class="tt">${n0(flowTot(get))}</td>${calce(pp-flowTot(get))}</tr>`;};
+  const body=CLINES.map(l=>lineRow(l,"cl1")).join("")+sumRow("Subtotal",CLINES,"csub")+sumRow("Contingencia",CCONT,"cgrp")+CCONT.map(l=>lineRow(l,"cline")).join("")+sumRow(`Total ${esc(r.nombre)}`,CALL,"ctot");
+  const ae=document.activeElement,d=ae&&ae.closest&&ae.closest("#cosTable")&&ae.dataset;
+  const kf=d?(d.fk?`[data-fk="${d.fk}"]`+(d.iid?`[data-iid="${d.iid}"]`:`[data-fl="${d.fl}"]`):d.iid?`[data-iid="${d.iid}"][data-ic="${d.ic}"]`:d.cl?`[data-cl="${d.cl}"][data-cc="${d.cc}"]`:null):null;
+  const tbl=$("#cosTable");tbl.classList.toggle("open27",open27);
+  tbl.innerHTML=head+`<tbody>${body}</tbody>`;
+  if(kf){const el=document.querySelector("#cosTable input"+kf);if(el)el.focus();}
+}
+/* escrituras */
+function saveCos(id,patch){const r=costos.find(x=>x.id===id);if(!r)return;
+  for(const k in patch){if(k==="lines"){r.lines=r.lines||{};for(const l in patch.lines){const old=r.lines[l]||{},np=patch.lines[l];
+      r.lines[l]={...old,...np,...(np.flujo?{flujo:{...(old.flujo||{}),...np.flujo}}:{})};}}else r[k]=patch[k];}
+  r.actualizado=now();render();store.upd("costos",id,{...patch,actualizado:r.actualizado});}
+function setItems(o,fn){const id=ensureCos(o),r=costos.find(x=>x.id===id);const items=structuredClone(r.items||[]);fn(items);saveCos(id,{items});}
+$("#cosTable").addEventListener("change",e=>{const o=curCos();if(!o)return;const el=e.target;if(!el.dataset)return;const v=el.value===""?null:Number(el.value);
+  if(el.dataset.fk){const k=el.dataset.fk;
+    if(el.dataset.iid){setItems(o,its=>{const i=its.find(x=>x.id===el.dataset.iid);if(i){i.flujo=i.flujo||{};i.flujo[k]=v;}});return;}
+    if(el.dataset.fl){saveCos(ensureCos(o),{lines:{[el.dataset.fl]:{flujo:{[k]:v}}}});}return;}
+  if(el.dataset.iid){setItems(o,its=>{const i=its.find(x=>x.id===el.dataset.iid);if(!i)return;if(el.dataset.ic==="ppto")i.ppto=v;else{i.c=i.c||{};i.c[el.dataset.ic]=v;}});return;}
+  if(el.dataset.cl)saveCos(ensureCos(o),{lines:{[el.dataset.cl]:{[el.dataset.cc]:v}}});});
+function cosClick(e){
+  const y=e.target.closest("[data-ytog]");if(y){const k=y.dataset.ytog;cosYears.has(k)?cosYears.delete(k):cosYears.add(k);try{localStorage.setItem("gpro-cosy",JSON.stringify([...cosYears]))}catch(_){}renderCos();return;}
+  const t=e.target.closest("[data-ctog]");if(t){const k=t.dataset.ctog;cosOpen.has(k)?cosOpen.delete(k):cosOpen.add(k);saveOpen();renderCos();return;}
+  const al=e.target.closest("[data-addline]");if(al){openItForm(null,al.dataset.addline,null);return;}
+  const a=e.target.closest("[data-iact]");if(!a)return;const id=a.dataset.iid,o=curCos();
+  if(a.dataset.iact==="edit")openItForm(id);
+  if(a.dataset.iact==="add"){const r=o&&o.r,i=r&&(r.items||[]).find(x=>x.id===id);if(i)openItForm(null,i.line,i.id);}
+  if(a.dataset.iact==="del"){ui.confirm=id;renderCos();}
+  if(a.dataset.iact==="del-no"){ui.confirm=null;renderCos();}
+  if(a.dataset.iact==="del-yes"){ui.confirm=null;setItems(o,its=>{const kill=new Set([id]);let ch=true;while(ch){ch=false;its.forEach(x=>{if(x.parent&&kill.has(x.parent)&&!kill.has(x.id)){kill.add(x.id);ch=true;}});}
+    for(let j=its.length-1;j>=0;j--)if(kill.has(its[j].id))its.splice(j,1);});toast("Ítem eliminado");}
+}
+["#cosTable"].forEach(q=>{$(q).addEventListener("click",cosClick);$(q).addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input")){e.preventDefault();e.target.blur();}});});
+$("#cosSel").addEventListener("change",e=>{cosSel=e.target.value;try{localStorage.setItem("gpro-cos",cosSel)}catch(_){}renderCos();});
+$("#cosPer").addEventListener("change",e=>{const o=curCos();if(o)saveCos(ensureCos(o),{periodo:e.target.value});});
+$("#cosExp").addEventListener("click",()=>{const o=curCos();if(!o||!o.r)return;const r=o.r;
+  const keys=[...CALL.filter(l=>hasItems(r,l.k)).map(l=>"L:"+l.k),...(r.items||[]).filter(i=>i.group).map(i=>i.id)];
+  const anyClosed=keys.some(k=>!cosOpen.has(k));keys.forEach(k=>anyClosed?cosOpen.add(k):cosOpen.delete(k));saveOpen();renderCos();});
+$("#cosAddIt").addEventListener("click",()=>openItForm(null,"con",null));
+$("#xlsBtn3").addEventListener("click",()=>$("#xlsBtn").click());
+/* formulario de ítem */
+let itEdit=null,itKind="item";
+const itf={bg:$("#itModal"),line:$("#itLine"),par:$("#itParent"),nombre:$("#itNombre"),cant:$("#itCant"),unid:$("#itUnid"),ppto:$("#itPpto"),meses:$("#itMeses"),ini:$("#itIni")};
+itf.line.innerHTML=CALL.map(l=>`<option value="${l.k}">${l.t}</option>`).join("");
+function setItKind(v){itKind=v;document.querySelectorAll("#itKind button").forEach(b=>{const on=b.dataset.v===v;b.classList.toggle("on",on);b.setAttribute("aria-checked",String(on));});
+  document.querySelectorAll("#itModal .itx").forEach(x=>x.hidden=v==="group");}
+$("#itKind").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setItKind(b.dataset.v);});
+function fillParents(line,sel,self){const o=curCos(),r=o&&o.r;const gs=((r&&r.items)||[]).filter(i=>i.group&&i.line===line&&i.id!==self);
+  itf.par.innerHTML=`<option value="">${esc(CALL.find(l=>l.k===line).t)} (directo)</option>`+gs.map(g=>`<option value="${g.id}">${esc(g.nombre)}</option>`).join("");itf.par.value=sel||"";}
+itf.line.addEventListener("change",()=>fillParents(itf.line.value,"",itEdit));
+function openItForm(id,line,parent){
+  const o=curCos();if(!o)return;itEdit=id||null;const r=o.r,i=id&&r?(r.items||[]).find(x=>x.id===id):null;
+  $("#itTitle").textContent=i?"Editar ítem":"Nuevo ítem de costo";$("#itOk").textContent=i?"Guardar":"Agregar";
+  itf.line.value=i?i.line:(line||"con");fillParents(itf.line.value,i?i.parent:parent,id);
+  itf.nombre.value=i?.nombre||"";itf.cant.value=i?.cant??"";itf.unid.value=i?.unidad||"";itf.ppto.value=i?.ppto??"";itf.meses.value=i?.meses??"";
+  itf.ini.innerHTML=`<option value="">${i?"No cambiar el flujo":"No distribuir (lo escribo a mano)"}</option>`+["CY26",...M27].map(k=>`<option value="${k}">${k==="CY26"?"2026 (CY26)":mLong(k)}</option>`).join("");
+  setItKind(i?.group?"group":"item");$("#itErr").hidden=true;itf.bg.hidden=false;setTimeout(()=>itf.nombre.focus(),0);
+}
+const closeIt=()=>{itf.bg.hidden=true;itEdit=null;};
+$("#itCancel").addEventListener("click",closeIt);
+itf.bg.addEventListener("mousedown",e=>{if(e.target===itf.bg)closeIt();});
+itf.bg.addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();closeIt();}});
+function spread(ppto,meses,start){const f={};if(!ppto||!meses||!start)return null;const per=ppto/meses;
+  if(start==="CY26"){f.CY26=ppto;return f;}
+  let idx=M27.indexOf(start);for(let m=0;m<meses;m++){const k=idx+m<M27.length?M27[idx+m]:"CY28";f[k]=(f[k]||0)+per;}
+  Object.keys(f).forEach(k=>f[k]=Math.round(f[k]*1000)/1000);return f;}
+$("#itForm").addEventListener("submit",e=>{e.preventDefault();
+  const nombre=itf.nombre.value.trim();if(!nombre){$("#itErr").hidden=false;itf.nombre.focus();return;}
+  const o=curCos();if(!o)return;const n=v=>v===""?null:Number(v);
+  const base={line:itf.line.value,parent:itf.par.value||null,group:itKind==="group",nombre};
+  if(itKind!=="group")Object.assign(base,{cant:n(itf.cant.value),unidad:itf.unid.value.trim(),ppto:n(itf.ppto.value),meses:n(itf.meses.value)});
+  const fl=itKind==="group"?null:spread(base.ppto,base.meses,itf.ini.value);
+  const id0=itEdit;closeIt();
+  setItems(o,its=>{
+    if(id0){const i=its.find(x=>x.id===id0);if(!i)return;Object.assign(i,base);if(fl)i.flujo=fl;}
+    else its.push({id:"it"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),...base,c:{},flujo:fl||{},orden:Date.now()});
+  });
+  cosOpen.add("L:"+base.line);if(base.parent)cosOpen.add(base.parent);saveOpen();renderCos();
+  toast(id0?"Ítem actualizado":"Ítem agregado");
+});
+/* reporte para un proyecto fuera de la matriz */
+let cEdit=null;
+function openCosForm(id){
+  cEdit=id||null;const r=id?costos.find(x=>x.id===id):null;
+  $("#cTitle").textContent=r?"Renombrar reporte":"Reporte para otro proyecto";$("#cfOk").textContent=r?"Guardar":"Crear";
+  $("#cosList").innerHTML="";
+  $("#cfNombre").value=r?.nombre||"";$("#cfPer").value=r?.periodo||NOWK;$("#cfPep").value=r?.pep||"";$("#cfErr").hidden=true;
+  $("#cModal").hidden=false;setTimeout(()=>$("#cfNombre").focus(),0);
+}
+const closeCos=()=>{$("#cModal").hidden=true;cEdit=null;};
+$("#cosNew").addEventListener("click",()=>openCosForm());
+$("#cosRen").addEventListener("click",()=>{const o=curCos();if(o&&o.r)openCosForm(o.r.id);});
+$("#cfCancel").addEventListener("click",closeCos);
+$("#cModal").addEventListener("mousedown",e=>{if(e.target===$("#cModal"))closeCos();});
+$("#cModal").addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();closeCos();}});
+$("#cForm").addEventListener("submit",e=>{e.preventDefault();
+  const nombre=$("#cfNombre").value.trim();if(!nombre){$("#cfErr").hidden=false;return;}
+  const data={nombre,periodo:$("#cfPer").value,pep:$("#cfPep").value.trim()};const id0=cEdit;closeCos();
+  if(id0){saveCos(id0,data);toast("Reporte actualizado");return;}
+  const p=projects.find(x=>x.nombre.toLowerCase()===nombre.toLowerCase());
+  if(p){cosSel="p:"+p.id;renderCos();toast("Ese proyecto ya está en la lista");return;}
+  const full={...data,proyectoId:"",lines:{},items:[],orden:Date.now(),actualizado:now()},id=store.newId();
+  costos.push({id,...full});cosSel=id;try{localStorage.setItem("gpro-cos",id)}catch(_){}render();store.add("costos",id,full);toast("Reporte creado");
+});
+
+/* ---------- exportar a Excel ---------- */
+/*@XLSXW@*/
+function cosSheets(){
+  const used=new Set();
+  const sname=t=>{let b=("9C "+t).replace(/[\[\]:*?\/\\]/g," ").slice(0,31).trim(),x=b,i=2;while(used.has(x)){x=b.slice(0,28)+" "+i++;}used.add(x);return x;};
+  return [...costos].sort((a,b)=>(a.orden||0)-(b.orden||0)).map(r=>{
+    const rows=[[{v:`${r.nombre}${r.pep?" · "+r.pep:""} · ${perLabel(r.periodo)} · kUS$`,s:7}]];
+    rows.push([{v:"Descripción",s:1},{v:"Cantidad",s:1},{v:"Unidad",s:1},{v:"Meses",s:1},...CCOLS.map(c=>({v:`${c.n}. ${c.t}`,s:1})),{v:"CY26",s:1},...M27.map(k=>({v:mLong(k),s:1})),{v:"CY27",s:1},{v:"CY28",s:1},{v:"Total CAPEX",s:1},{v:"Calce",s:1}]);
+    const fl=(get,pp)=>{const ks=FKEYS.map(get),tot=ks.reduce((a,b)=>a+b,0);return [{v:+ks[0].toFixed(1),s:6},...M27.map((k,j)=>({v:+ks[j+1].toFixed(1),s:6})),{v:+M27.reduce((s,k)=>s+get(k),0).toFixed(1),s:6},{v:+ks[ks.length-1].toFixed(1),s:6},{v:+tot.toFixed(1),s:6},{v:+(pp-tot).toFixed(1),s:6}];};
+    const line=(lab,f,st,get,i)=>[{v:lab,s:st},i&&i.cant?i.cant:"",i?i.unidad||"":"",i&&i.meses?i.meses:"",...CCOLS.map(c=>({v:+f(c.k).toFixed(1),s:6})),...(get?fl(get,f("apr")):[])];
+    const itemsRec=(line_,parent,depth,out,fn)=>itemsOf(r,line_,parent).forEach(i=>{out.push(fn(i,depth));if(i.group)itemsRec(line_,i.id,depth+1,out,fn);});
+    const add9=l=>{rows.push(line(l.t,c=>cval(r,l.k,c),7,k=>lflow(r,l.k,k)));itemsRec(l.k,null,1,rows,(i,d)=>line(" ".repeat(d*3)+i.nombre,c=>ival(r,i,c),i.group?7:0,k=>iflow(r,i,k),i.group?null:i));};
+    CLINES.forEach(add9);
+    const sl=ls=>k=>ls.reduce((s,l)=>s+lflow(r,l.k,k),0);
+    rows.push(line("Subtotal",c=>csum(r,CLINES,c),7,sl(CLINES)));
+    rows.push(line("Contingencia",c=>csum(r,CCONT,c),7,sl(CCONT)));
+    CCONT.forEach(add9);
+    rows.push(line("Total "+r.nombre,c=>csum(r,CALL,c),7,sl(CALL)));
+    return {name:sname(r.nombre),rows,cols:[46,11,7,7,...CCOLS.map(()=>14),10,...M27.map(()=>10),11,11,12,10],freeze:[1,2],headerHeight:42};
+  });
+}
+function buildWorkbook(){
+  const SS={ok:2,run:3,pin:4,pend:5};
+  // Hoja 1: proyectos
+  const head=["Proyecto","Descripción","Fase","Tipo","Jefe de Ingeniería","Jefe Ejecutor","PEP","PPTO 2027 (kUS$)","CB 2027 (kUS$)","N° iniciativas",...STAGES.map(s=>s.t),"Hitos ADS","Avance (%)","Faltan","Próximo"];
+  const rows=[head.map(h=>({v:h,s:1}))];
+  projects.forEach(p=>{
+    const pr=progress(p),e=p.etapas||{},k=kidsOf(p);
+    rows.push([{v:p.nombre,s:7},p.desc||"",p.fase||"Por definir",p.tipo||"Sin tipo",p.jefeIng||"",p.jefeEje||"",p.pep||"",{v:pMonto(p),s:6},{v:pCB(p)??"",s:6},k.length,
+      ...STAGES.map(s=>k.length?{v:"Ver iniciativas",s:5}:{v:STATE_TXT[e[s.k]||"pend"],s:SS[e[s.k]||"pend"]}),
+      {v:gatesOf(p).map(g=>`${g.t}: ${STATE_TXT[g.v]}`).join("\n")||"—",s:8},
+      Math.round(pr.pct*100),pr.falta,pr.next?pr.next.t:"Cerrado"]);
+  });
+  // Hoja 2: iniciativas (cada celda de etapa lleva el nombre de la etapa y el color de su estado)
+  const maxN=Math.max(...Object.values(KINDS).map(k=>k.stages.length));
+  const ih=["Proyecto","Iniciativa","Tipo de seguimiento","PPTO 2027 (kUS$)","CB 2027 (kUS$)","Empresa / proveedor","N° OC / contrato","Responsable","Inicio","Término",...Array.from({length:maxN},(_,n)=>`Etapa ${n+1}`),"Avance (%)","Faltan","Próximo"];
+  const irows=[ih.map(h=>({v:h,s:1}))];
+  projects.forEach(p=>kidsOf(p).forEach(i=>{
+    const K=KINDS[i.kind]||KINDS.ing,pr=iniProg(i),e=i.etapas||{};
+    irows.push([p.nombre,{v:i.nombre,s:7},K.t,{v:i.ppto??"",s:6},{v:i.cb??"",s:6},i.proveedor||"",i.oc||"",i.responsable||"",fdate(i.inicio),fdate(i.termino),
+      ...Array.from({length:maxN},(_,n)=>{const s=K.stages[n];if(!s)return "";const v=e[s.k]||"pend";return {v:s.t,s:SS[v]};}),
+      Math.round(pr.pct*100),pr.falta,pr.next?pr.next.t:"Cerrado"]);
+  }));
+  // Hoja 3: resumen
+  const grp=t=>projects.filter(p=>t==null||(p.tipo||"")===t);
+  const res=[["Tipo","Proyectos","PPTO proyectos (kUS$)","Ajustes (kUS$)","PPTO total (kUS$)","Avance promedio (%)","Entregables faltantes"].map(h=>({v:h,s:1}))];
+  [["Capex","Capex"],["C3","C3"],["Sin tipo",""],["Total",null]].forEach(([lab,t])=>{
+    const a=grp(t),sp=a.reduce((s,p)=>s+pMonto(p),0),sa=t===""?0:adjSum(t);
+    res.push([{v:lab,s:7},a.length,{v:+sp.toFixed(1),s:6},{v:+sa.toFixed(1),s:6},{v:+(sp+sa).toFixed(1),s:6},
+      a.length?Math.round(a.reduce((s,p)=>s+progress(p).pct,0)/a.length*100):0,a.reduce((s,p)=>s+progress(p).falta,0)]);
+  });
+  if(ajustes.length){res.push([],[{v:"Ajustes de cartera",s:1},{v:"Tipo",s:1},{v:"PPTO 2027 (kUS$)",s:1}]);
+    ajustes.forEach(a=>res.push([a.nombre+(a.desc?" · "+a.desc:""),a.tipo||"",{v:num(a.monto),s:6}]));}
+  res.push([],["Generado",new Date().toLocaleString("es-CL")]);
+  // Hoja 4: flujos (plan mensual)
+  const fh=["Proyecto","Iniciativa","PPTO 2027 (kUS$)",...MESES.map(mLong),"Total 2027","Dif. vs PPTO"];
+  const frows=[fh.map(h=>({v:h,s:1}))];
+  partidas().filter(x=>!x.head).forEach(x=>{const t=sumKeys(x.o,M27);
+    frows.push([x.p.nombre,x.solo?"—":x.nombre,{v:x.ppto,s:6},...MESES.map(k=>{const v=planOf(x.o)[k];return {v:v==null||v===""?"":num(v),s:6};}),{v:+t.toFixed(1),s:6},{v:+(t-x.ppto).toFixed(1),s:6}]);});
+  const mt=monthTotals(),t27=M27.reduce((s,k)=>s+mt[MESES.indexOf(k)],0),pp=partidas().filter(x=>!x.head).reduce((s,x)=>s+x.ppto,0);
+  frows.push([{v:"Total cartera",s:7},"",{v:pp,s:6},...mt.map(v=>({v:+v.toFixed(1),s:6})),{v:+t27.toFixed(1),s:6},{v:+(t27-pp).toFixed(1),s:6}]);
+  return XW.build([
+    {name:"Proyectos",rows,cols:[22,40,10,8,18,16,14,14,14,11,...STAGES.map(()=>14),40,10,8,30],filter:true,freeze:[1,1],headerHeight:42},
+    {name:"Iniciativas",rows:irows,cols:[20,36,20,14,14,22,16,18,10,10,...Array.from({length:maxN},()=>18),10,8,26],filter:true,freeze:[2,1],headerHeight:30},
+    {name:"Resumen",rows:res,cols:[46,11,20,16,18,20,22]},
+    {name:"Flujos plan",rows:frows,cols:[20,34,12,...MESES.map(()=>10),12,12],freeze:[3,1],headerHeight:20},
+    ...cosSheets()
+  ]);
+}
+const xlsName=()=>"Control_Entregables_GPRO_"+new Date().toISOString().slice(0,10)+".xlsx";
+
+/* ---------- formulario de proyecto ---------- */
+let editId=null;
+const fm={bg:$("#modal"),form:$("#pForm"),nombre:$("#fmNombre"),fase:$("#fmFase"),pep:$("#fmPep"),monto:$("#fmMonto"),ji:$("#fmJi"),je:$("#fmJe"),desc:$("#fmDesc"),err:$("#fmErr")};
+fm.fase.innerHTML=FASES.map(f=>`<option value="${f}">${f}</option>`).join("")+'<option value="">Por definir</option>';
+let fmTipo="";
+function setTipo(v){fmTipo=v;document.querySelectorAll("#fmTipo button").forEach(b=>{const on=b.dataset.v===v;b.classList.toggle("on",on);b.setAttribute("aria-checked",String(on));});}
+$("#fmTipo").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setTipo(fmTipo===b.dataset.v?"":b.dataset.v);});
+function fillPeople(){
+  const names=new Set(["TBD"]);
+  projects.forEach(x=>{x.jefeIng&&names.add(x.jefeIng);x.jefeEje&&names.add(x.jefeEje);});
+  inis.forEach(x=>x.responsable&&names.add(x.responsable));
+  $("#respList").innerHTML=[...names].sort().map(n=>`<option value="${esc(n)}">`).join("");
+  $("#provList").innerHTML=[...new Set(inis.map(i=>i.proveedor).filter(Boolean))].sort().map(n=>`<option value="${esc(n)}">`).join("");
+}
+function openForm(id){
+  editId=id||null;const p=id?projects.find(x=>x.id===id):null,hasK=p&&kidsOf(p).length>0;
+  $("#mTitle").textContent=p?"Editar proyecto":"Nuevo proyecto";$("#fmOk").textContent=p?"Guardar":"Agregar";
+  fm.nombre.value=p?.nombre||"";fm.fase.value=p?(p.fase||""):"PFS";fm.pep.value=p?.pep||"";
+  fm.monto.value=p?.monto??"";$("#fmMontoHint").hidden=!hasK;
+  fm.ji.value=p?.jefeIng||"";fm.je.value=p?.jefeEje||"";fm.desc.value=p?.desc||"";setTipo(p?.tipo||"");
+  fm.err.hidden=true;fm.nombre.classList.remove("bad");fillPeople();
+  fm.bg.hidden=false;closePop();setTimeout(()=>fm.nombre.focus(),0);
+}
+function closeForm(){fm.bg.hidden=true;editId=null;}
+$("#fmCancel").addEventListener("click",closeForm);
+fm.nombre.addEventListener("input",()=>{if(fm.nombre.value.trim()){fm.err.hidden=true;fm.nombre.classList.remove("bad");}});
+fm.bg.addEventListener("mousedown",e=>{if(e.target===fm.bg)closeForm();});
+fm.bg.addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();closeForm();}});
+fm.form.addEventListener("submit",e=>{
+  e.preventDefault();
+  const nombre=fm.nombre.value.trim();
+  if(!nombre){fm.err.hidden=false;fm.nombre.classList.add("bad");fm.nombre.focus();return;}
+  const data={nombre,fase:fm.fase.value,pep:fm.pep.value.trim(),tipo:fmTipo,jefeIng:fm.ji.value.trim(),jefeEje:fm.je.value.trim(),desc:fm.desc.value.trim()};
+  {const m=fm.monto.value;data.monto=m===""?null:Number(m);}
+  const id=editId;closeForm();
+  if(id){save(id,data);toast("Proyecto actualizado");}
+  else{createProject(data);toast("Proyecto agregado");}
+});
+
+/* ---------- formulario de iniciativa ---------- */
+let iEditId=null,ifKind="ing";
+const fi={bg:$("#iModal"),form:$("#iForm"),p:$("#ifP"),nombre:$("#ifNombre"),ppto:$("#ifPpto"),cb:$("#ifCb"),prov:$("#ifProv"),oc:$("#ifOc"),resp:$("#ifResp"),ini:$("#ifIni"),fin:$("#ifFin"),err:$("#ifErr")};
+function setKind(v){ifKind=v;document.querySelectorAll("#ifKind button").forEach(b=>{const on=b.dataset.v===v;b.classList.toggle("on",on);b.setAttribute("aria-checked",String(on));});
+  $("#ifStages").innerHTML=`<b>Etapas de seguimiento:</b> ${KINDS[v].stages.map(s=>esc(s.t)).join(" → ")}`;}
+$("#ifKind").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setKind(b.dataset.v);});
+function openIniForm(id,pid){
+  iEditId=id||null;const i=id?inis.find(x=>x.id===id):null;
+  if(!projects.length){toast("Primero agrega un proyecto.");return;}
+  $("#iTitle").textContent=i?"Editar iniciativa":"Nueva iniciativa";$("#ifOk").textContent=i?"Guardar":"Agregar";
+  fi.p.innerHTML='<option value="">Elige un proyecto…</option>'+projects.map(p=>`<option value="${p.id}">${esc(p.nombre)}</option>`).join("");
+  fi.p.value=i?i.proyectoId:(pid||"");
+  fi.nombre.value=i?.nombre||"";fi.ppto.value=i?.ppto??"";fi.cb.value=i?.cb??"";fi.prov.value=i?.proveedor||"";fi.oc.value=i?.oc||"";
+  fi.resp.value=i?.responsable||"";fi.ini.value=i?.inicio||"";fi.fin.value=i?.termino||"";setKind(i?.kind||"ing");
+  fi.err.hidden=true;fi.nombre.classList.remove("bad");fi.p.classList.remove("bad");fillPeople();
+  fi.bg.hidden=false;closePop();setTimeout(()=>(fi.p.value?fi.nombre:fi.p).focus(),0);
+}
+function closeIniForm(){fi.bg.hidden=true;iEditId=null;}
+$("#ifCancel").addEventListener("click",closeIniForm);
+fi.bg.addEventListener("mousedown",e=>{if(e.target===fi.bg)closeIniForm();});
+fi.bg.addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();closeIniForm();}});
+[fi.nombre,fi.p].forEach(el=>el.addEventListener("input",()=>{if(fi.nombre.value.trim()&&fi.p.value){fi.err.hidden=true;fi.nombre.classList.remove("bad");fi.p.classList.remove("bad");}}));
+fi.form.addEventListener("submit",e=>{
+  e.preventDefault();
+  const nombre=fi.nombre.value.trim(),pid=fi.p.value;
+  if(!nombre||!pid){fi.err.hidden=false;fi.nombre.classList.toggle("bad",!nombre);fi.p.classList.toggle("bad",!pid);(pid?fi.nombre:fi.p).focus();return;}
+  const n=v=>v===""?null:Number(v);
+  const data={proyectoId:pid,nombre,kind:ifKind,ppto:n(fi.ppto.value),cb:n(fi.cb.value),proveedor:fi.prov.value.trim(),oc:fi.oc.value.trim(),
+    responsable:fi.resp.value.trim(),inicio:fi.ini.value,termino:fi.fin.value};
+  const id=iEditId;closeIniForm();
+  if(id){saveIni(id,data);toast("Iniciativa actualizada");}
+  else{createIni(data);toast("Iniciativa agregada");}
+});
