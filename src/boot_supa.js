@@ -9,12 +9,12 @@ render();
   const warn=m=>{sync.textContent=m;sync.classList.add("warn");};
   if(!window.supabase||!SUPA.url||!SUPA.key){warn("Sin conexión a la nube · recarga la página");return;}
   const sb=window.supabase.createClient(SUPA.url,SUPA.key,{auth:{persistSession:false,autoRefreshToken:false}});
-  const COLS={proyectos:()=>projects,iniciativas:()=>inis,ajustes:()=>ajustes,costos:()=>costos};
+  const COLS={proyectos:()=>DB.proyectos,iniciativas:()=>DB.iniciativas,ajustes:()=>DB.ajustes,costos:()=>DB.costos};
   const setCol=(c,arr)=>{arr.sort((a,b)=>(a.orden||0)-(b.orden||0));
-    if(c==="proyectos")projects=arr;else if(c==="iniciativas")inis=arr;else if(c==="ajustes")ajustes=arr;else if(c==="costos")costos=arr;};
+    if(DB[c])DB[c]=arr;};
   /* si alguien está escribiendo en una celda, se espera a que termine antes de redibujar */
   let pending=false;
-  const editing=()=>{const a=document.activeElement;return a&&a.matches&&a.matches("input,select")&&a.closest("#rows,#finTable,#cosTable");};
+  const editing=()=>{const a=document.activeElement;return a&&a.matches&&a.matches("input,select,textarea")&&a.closest("#rows,#finTable,#cosTable");};
   const rerender=()=>{if(editing()){pending=true;renderSummary();return;}pending=false;render();};
   document.addEventListener("focusout",()=>setTimeout(()=>{if(pending&&!editing())rerender();},0));
   const stamp=()=>{sync.classList.remove("warn");sync.textContent="En línea · guardado "+new Date().toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"});};

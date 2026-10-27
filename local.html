@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Control Entregables GPRO</title>
+<title>Control de Avance de Proyectos</title>
 <style>
 /* Layout: kicker + título + barra de acentos → chips resumen → toolbar → matriz con cabecera teal (formato Foro Ingeniería AMSA). Look único claro, como el Foro. */
 :root{
@@ -400,18 +400,133 @@ body.has-syncbar .wrap{padding-bottom:72px}
 .syncbar .btn-ghost.sm{padding:5px 12px;font-size:11.5px}
 .syncbar button:disabled{opacity:.5;cursor:default}
 body.has-syncbar .toast{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+/* etiqueta del ambiente de prueba (solo artifact) */
+.testtag{font:bold 10px var(--f);letter-spacing:1px;text-transform:uppercase;color:#7A5A00;background:#FDF3D0;border:1px solid var(--gold);border-radius:20px;padding:6px 12px;white-space:nowrap}
+.topbar>.testtag{margin-left:auto;margin-right:-4px}
+/* selector de cartera por año */
+.topbar>.yrsel{margin-left:auto;align-items:center;align-self:center}
+.topbar>.yrsel~.testtag{margin-left:0}
+.yrsel .yrlab{font:bold 10px var(--f);letter-spacing:1px;text-transform:uppercase;color:var(--gray);padding:0 6px 0 10px}
+.yrsel button{font-size:13px;padding:7px 16px}
+@media (max-width:640px){.topbar>.yrsel{margin-left:0;order:3}}
+/* seguimiento de permisos */
+.kind.per{background:#A0522D}.kdot.per{background:#A0522D}
+.kseg.per{background:#F2E1D6}.kseg.per i{background:#A0522D}
+.kindsel button.on.per{background:#A0522D;border-color:#A0522D;color:var(--white)}
+/* nombre de iniciativa editable */
+.iname .ih .iname-in{flex:1 1 auto;min-width:0;border:1px solid transparent;background:transparent;padding:3px 6px;margin-left:-2px;font:bold 12px/1.35 var(--f);color:var(--navy);border-radius:8px;resize:none;overflow:hidden;field-sizing:content;font-family:inherit}
+.iname .ih .iname-in:hover{border-color:var(--line);background:var(--white)}
+.iname .ih .iname-in:focus{border-color:var(--teal);background:var(--white);outline:none}
+/* construcción y categoría */
+.kind.con{background:#4C8C2B}.kdot.con{background:#4C8C2B}
+.kseg.con{background:#DCEBD3}.kseg.con i{background:#4C8C2B}
+.kindsel button.on.con{background:#4C8C2B;border-color:#4C8C2B;color:var(--white)}
+.tm .tipo.cat button{font-size:9px;padding:2px 7px}
+.tipo button.on.cing{background:var(--navy);border-color:var(--navy);color:var(--white)}
+.tipo button.on.ccon{background:#4C8C2B;border-color:#4C8C2B;color:var(--white)}
+#tabFin>.toolbar{margin-bottom:12px}
+/* línea base y cumplimiento */
+.step .sd{font-size:9px;color:var(--gray);line-height:1.1;white-space:nowrap}
+.step .sd.ok{color:var(--green)}.step .sd.late{color:var(--red);font-weight:bold}
+.lbb{display:inline-flex;align-items:center;gap:5px;margin-top:6px;font:11px var(--f);color:var(--navy);background:var(--white);border:1px solid var(--line);border-radius:12px;padding:3px 9px;cursor:pointer;text-align:left;max-width:100%}
+.lbb:hover{border-color:var(--teal)}
+.lbb.none{color:var(--teal);border-style:dashed;font-weight:bold}
+.lbb .sdot,.lbsem i{width:8px;height:8px;border-radius:50%;flex:0 0 auto;background:var(--gray);display:inline-block}
+.lbb.ok .sdot,.lbsem.ok i{background:var(--green2)}.lbb.warn .sdot,.lbsem.warn i{background:var(--gold)}.lbb.bad .sdot,.lbsem.bad i{background:var(--red)}
+.lbsem{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:bold;white-space:nowrap}
+.modal.lbm{width:min(980px,100%)}
+.lbst{font-size:12px;padding:8px 12px;border-radius:8px;background:var(--zebra);margin-bottom:10px}
+.lbst.congelada{background:#E5F1EC}.lbst.revision{background:#FDF3D0}
+.lbk{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11.5px;color:var(--gray);margin-bottom:10px}
+.lbk b{color:var(--navy)}.lbk b.neg{color:var(--red)}
+.lbact{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end;margin-bottom:10px}
+.lbact input{flex:1 1 260px;font:12px var(--f);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.lbact input.bad{border-color:var(--red)}
+.lbwarn{color:var(--red);font-size:12px;font-weight:bold}
+.lbscroll{overflow:auto;max-height:52vh;border:1px solid var(--line);border-radius:8px}
+table.lbt{min-width:640px;table-layout:auto;font-size:12px}
+table.lbt thead th{position:sticky;top:0;border-radius:0!important}
+table.lbt td{padding:4px 8px;border-bottom:1px solid var(--zebra)}
+table.lbt td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.lbt td.neg{color:var(--red);font-weight:bold}table.lbt td.pos{color:var(--green)}
+table.lbt tr.lbi td{background:var(--soft);padding:7px 8px}
+table.lbt tr.lbi small{color:var(--gray);margin-left:6px}
+table.lbt tr.lbi .btn-ghost{margin-left:10px;padding:3px 10px;font-size:11px}
+table.lbt input[type=date]{font:12px var(--f);border:1px solid var(--line);border-radius:6px;padding:3px 6px;color:var(--navy)}
+table.lbt input[type=date]:disabled{background:var(--zebra);color:var(--gray);border-color:transparent}
+.lbstate{font-size:11px;color:var(--gray)}.lbstate.ok{color:var(--green);font-weight:bold}.lbstate.run{color:#9A7300}.lbstate.pin{color:var(--red)}
+#lbHist h4{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin:14px 0 6px}
+.lbh{margin:0;padding-left:18px;font-size:12px;color:var(--navy)}
+table.lbw{font-size:11.5px}
+#tabCum>.toolbar{margin-bottom:12px;align-items:center}
+table.cumt{min-width:980px;table-layout:auto;font-size:12px}
+table.cumt td{padding:7px 8px;border-bottom:1px solid var(--zebra);vertical-align:middle}
+table.cumt th.num,table.cumt td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.cumt td.neg{color:var(--red);font-weight:bold}
+table.cumt td.nm b{display:block}table.cumt td.nm small{color:var(--gray);font-size:10.5px}
+table.cumt th.wk,table.cumt td.wk{background:#F4F8F9;color:var(--gray)}
+table.cumt tbody tr{cursor:pointer}table.cumt tbody tr:hover td{background:var(--soft)}
+table.cumt .lbb{margin-top:0}
+.lbb small{display:block;color:var(--gray);font-size:10px}
+/* flujos: series */
+#curveSub .lg{display:inline-flex;align-items:center;gap:5px;margin-right:12px;white-space:nowrap}
+#curveSub .lg i{display:inline-block;width:18px;height:0;border-top:2px solid}
+#curveSub i.lp{border-color:#00778B}#curveSub i.lf{border-color:#EAAA00;border-top-style:dotted}#curveSub i.lr{border-color:#4C8C2B;border-top-width:3px}#curveSub i.lj{border-color:#4C8C2B;border-top-style:dashed}
+#finKpi .sub .up{color:var(--red);font-weight:bold}#finKpi .sub .dn{color:var(--green);font-weight:bold}
+#finSer button{padding:5px 11px;font-size:10.5px}
+.btn-add.sm{padding:6px 12px;font-size:12px}
+table.fint thead tr.ms th.rm{background:#3F7524}
+table.fint thead tr.ms th i{font-style:normal;font-size:8px;margin-left:2px;opacity:.8}
+table.fint td.pj input{font-style:italic;color:var(--gray)}
+table.fint td.pj input::placeholder{color:#8A97A0}
+table.fint td.rm{background:#F1F7EE}
+/* zoom */
+.topbar>.zoomsel{margin-left:auto;align-self:center;align-items:center}
+.topbar>.zoomsel~.yrsel{margin-left:0}
+.zoomsel button{font-size:13px;padding:6px 10px;min-width:30px}
+.zoomsel #zVal{font-size:11px;min-width:48px;color:var(--navy)}
+.zoomsel button:disabled{opacity:.35;cursor:default}
+@media (max-width:640px){.topbar>.zoomsel{display:none}}
+/* CPI / valor ganado */
+.n-ok{color:var(--green)!important}.n-warn{color:#B07D00!important}
+table.evmt{min-width:900px;table-layout:auto;font-size:12px}
+table.evmt th{text-align:right;white-space:nowrap}table.evmt th.nm,table.evmt td.nm{text-align:left}
+table.evmt td{padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--zebra);white-space:nowrap}
+table.evmt td.nm{max-width:300px;overflow:hidden;text-overflow:ellipsis}
+table.evmt td.n-red,table.evmt td.n-ok,table.evmt td.n-warn{font-weight:bold}
+table.evmt td .up{color:var(--red)}table.evmt td .dn{color:var(--green)}
+table.evmt tr.ftot td{background:var(--soft);font-weight:bold;color:var(--teal);border-top:2px solid var(--teal)}
+.fisin{display:inline-flex;align-items:center;gap:2px}
+.fisin input{width:52px;text-align:right;font:12px var(--f);border:1px solid var(--line);border-radius:6px;padding:3px 5px;color:var(--navy)}
+.fisin input::placeholder{color:#9AA6AE}
+/* CPI por mes */
+.curve svg #chit{cursor:pointer}
+.cpistrip{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+.cpistrip .cl{margin-right:4px}
+.cpistrip button{display:flex;flex-direction:column;align-items:center;min-width:54px;border:1px solid var(--line);background:var(--white);border-radius:8px;padding:4px 6px;cursor:pointer;font:11px var(--f)}
+.cpistrip button small{color:var(--gray);font-size:9.5px;text-transform:uppercase;letter-spacing:.5px}
+.cpistrip button b{font-size:13px;color:var(--navy)}
+.cpistrip button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy);background:var(--soft)}
+.curve .tip .tcpi{font-weight:bold}
+.lnk{border:0;background:none;color:var(--teal);font:inherit;text-decoration:underline;cursor:pointer;padding:0}
+#finMes button{padding:5px 8px;font-size:10.5px}
+#finMes button.pj{font-style:italic;color:#9AA6AE}
+#finMes button.pj[aria-pressed="true"]{color:var(--white)}
+#tabFin>.toolbar{align-items:center;flex-wrap:wrap}
 </style>
 <style>body{margin:0}</style>
 </head>
 <body>
-<script id="datos" type="application/json">{"exportado": "2026-10-08T15:04:48Z", "proyectos": [{"id": "c27-rom-lp", "nombre": "ROM LP", "desc": "ROM Largo Plazo", "jefeIng": "Lorena Rojas", "jefeEje": "Enrique Pino", "monto": 1766.1, "fase": "", "tipo": "C3", "pep": "", "orden": 1, "etapas": {}, "gates": {}}, {"id": "c27-sulfuros", "nombre": "Sulfuros Primarios", "desc": "Sulfuros Primarios", "jefeIng": "Lorena Rojas", "jefeEje": "TBD", "monto": 1644.5, "fase": "", "tipo": "C3", "pep": "", "orden": 2, "etapas": {}, "gates": {}}, {"id": "c27-scp-f2", "nombre": "SCP Fase 2", "desc": "SCP Fase 2", "jefeIng": "Evelyn Herlitz", "jefeEje": "Eduardo Leiva", "monto": 1461.6, "fase": "", "tipo": "C3", "pep": "", "orden": 3, "etapas": {}, "gates": {}}, {"id": "c27-84-modulos", "nombre": "84 Módulos", "desc": "PFS 84 Módulos Heap Leach", "jefeIng": "Evelyn Herlitz", "jefeEje": "Enrique Pino", "monto": 500.0, "fase": "PFS", "tipo": "C3", "pep": "", "orden": 4, "etapas": {}, "gates": {}}, {"id": "c27-planta-ro", "nombre": "Planta RO", "desc": "PFS Planta RO", "jefeIng": "Cristian Díaz", "jefeEje": "TBD", "monto": 100.0, "fase": "PFS", "tipo": "C3", "pep": "", "orden": 5, "etapas": {}, "gates": {}}, {"id": "c27-ptas", "nombre": "PTAS", "desc": "PFS Mejoramiento PTAS 3400", "jefeIng": "Cristian Díaz", "jefeEje": "TBD", "monto": 200.0, "fase": "PFS", "tipo": "C3", "pep": "", "orden": 6, "etapas": {}, "gates": {}}, {"id": "c27-carro-cv007", "nombre": "Carro CV 007", "desc": "PFS Levantamiento Solución Definitiva Carro CV 007", "jefeIng": "Maximilian Campaña", "jefeEje": "TBD", "monto": 232.0, "fase": "PFS", "tipo": "C3", "pep": "", "orden": 7, "etapas": {"prep": "ok", "inputs": "ok", "bd": "ok", "p30": "ok", "p60": "ok", "rev": "ok", "p90": "pin"}, "gates": {}}, {"id": "c27-piscina-refino", "nombre": "Piscina refino", "desc": "PFS Reparación Geomembrana Piscina Refino", "jefeIng": "Maximilian Campaña", "jefeEje": "TBD", "monto": 250.0, "fase": "PFS", "tipo": "C3", "pep": "", "orden": 8, "etapas": {}, "gates": {}}, {"id": "c27-taller-cables", "nombre": "Taller Reparación Cables Mina", "desc": "PFS Normalización Taller Reparación de cables Mina", "jefeIng": "Cristian Díaz", "jefeEje": "TBD", "monto": 50.0, "fase": "PFS", "tipo": "C3", "pep": "", "orden": 9, "etapas": {}, "gates": {}}, {"id": "c27-calaminas-sx", "nombre": "Calaminas Laterales SX", "desc": "PFS Calaminas Laterales SX (Delivery Project)", "jefeIng": "Cristian Díaz", "jefeEje": "TBD", "monto": 50.0, "fase": "PFS", "tipo": "C3", "pep": "", "orden": 10, "etapas": {}, "gates": {}}, {"id": "c27-linea-pls", "nombre": "Línea PLS", "desc": "PFS Línea PLS", "jefeIng": "Cristian Díaz", "jefeEje": "TBD", "monto": 80.0, "fase": "PFS", "tipo": "C3", "pep": "", "orden": 11, "etapas": {"prep": "ok", "inputs": "ok", "bd": "ok", "p30": "pin"}, "gates": {}}, {"id": "c27-tambor", "nombre": "Tambor Aglomerador", "desc": "Estudio Vibraciones Tambor Aglomerador", "jefeIng": "Lorena Rojas", "jefeEje": "", "monto": 80.0, "fase": "", "tipo": "C3", "pep": "", "orden": 12, "etapas": {}, "gates": {}}], "ajustes": [{"id": "rescate-monumentos", "nombre": "Canal de Contorno Ripios Fase 2", "desc": "Rescate de Monumentos Nacionales (Ripios Fase 2) · Permisos", "tipo": "C3", "monto": -1198.4, "orden": 1}, {"id": "ensayos-geotecnicos", "nombre": "Ensayos Geotécnicos Ripios Fase 2", "desc": "Ensayos", "tipo": "C3", "monto": -47.6, "orden": 2}, {"id": "linea-acido-sx", "nombre": "Línea Ácido SX", "desc": "PFS Línea Ácido SX · Estudio", "tipo": "C3", "monto": -119.8, "orden": 3}], "iniciativas": [{"id": "i-romlp-pfs", "proyectoId": "c27-rom-lp", "nombre": "PFS ROM Largo Plazo", "kind": "ing", "ppto": 459.5, "cb": 459.5, "proveedor": "", "oc": "", "responsable": "", "inicio": "", "termino": "", "etapas": {}, "orden": 1}, {"id": "i-romlp-geotec", "proyectoId": "c27-rom-lp", "nombre": "Ensayos geotécnicos ROM - Cuprochlor", "kind": "ens", "ppto": 1007.0, "cb": 357.0, "proveedor": "", "oc": "", "responsable": "", "inicio": "", "termino": "", "etapas": {}, "orden": 2}, {"id": "i-romlp-metal", "proyectoId": "c27-rom-lp", "nombre": "Ensayos metalúrgicos ROM", "kind": "ens", "ppto": 299.6, "cb": 299.6, "proveedor": "", "oc": "", "responsable": "", "inicio": "", "termino": "", "etapas": {}, "orden": 3}], "costos": [{"id": "cos-canales-f2", "nombre": "Canales de Contorno Ripios Fase 2", "pep": "", "periodo": "2026-10", "proyectoId": "", "orden": 1, "lines": {"cont": {"flujo": {"CY28": 2832.4}, "base": 2832.4}}, "items": [{"id": "it01", "line": "ing", "parent": null, "group": false, "nombre": "Ingeniería de Terreno", "cant": null, "unidad": "", "ppto": 0, "meses": null, "c": {}, "flujo": {}, "orden": 1}, {"id": "g-canales", "line": "con", "parent": null, "group": true, "nombre": "Construcción Canales de Contorno", "cant": null, "unidad": "", "ppto": null, "meses": null, "c": {}, "flujo": {}, "orden": 2}, {"id": "it03", "line": "con", "parent": "g-canales", "group": false, "nombre": "Excavación Masivo – Suelo Común", "cant": 185563, "unidad": "m3", "ppto": 2256, "meses": 8, "c": {}, "flujo": {"2027-09": 282.0, "2027-10": 282.0, "2027-11": 282.0, "2027-12": 282.0, "CY28": 1128.0}, "orden": 3}, {"id": "it04", "line": "con", "parent": "g-canales", "group": false, "nombre": "Perforación y Tronadura", "cant": 44481, "unidad": "m3", "ppto": 946, "meses": 8, "c": {}, "flujo": {"2027-09": 118.25, "2027-10": 118.25, "2027-11": 118.25, "2027-12": 118.25, "CY28": 473.0}, "orden": 4}, {"id": "it05", "line": "con", "parent": "g-canales", "group": false, "nombre": "Excavación Masivo – Roca Sana", "cant": 44481, "unidad": "m3", "ppto": 793, "meses": 8, "c": {}, "flujo": {"2027-09": 99.125, "2027-10": 99.125, "2027-11": 99.125, "2027-12": 99.125, "CY28": 396.5}, "orden": 5}, {"id": "it06", "line": "con", "parent": "g-canales", "group": false, "nombre": "Relleno Masivo – Material de Excavación", "cant": 222787, "unidad": "m3", "ppto": 2635, "meses": 8, "c": {}, "flujo": {"2027-09": 329.375, "2027-10": 329.375, "2027-11": 329.375, "2027-12": 329.375, "CY28": 1317.5}, "orden": 6}, {"id": "it07", "line": "con", "parent": "g-canales", "group": false, "nombre": "Instalación Geomembrana", "cant": 208178, "unidad": "m2", "ppto": 2082, "meses": 8, "c": {}, "flujo": {"2027-09": 260.25, "2027-10": 260.25, "2027-11": 260.25, "2027-12": 260.25, "CY28": 1041.0}, "orden": 7}, {"id": "it08", "line": "con", "parent": "g-canales", "group": false, "nombre": "Instalación Geotextil", "cant": 41658, "unidad": "m2", "ppto": 426, "meses": 8, "c": {}, "flujo": {"2027-09": 53.25, "2027-10": 53.25, "2027-11": 53.25, "2027-12": 53.25, "CY28": 213.0}, "orden": 8}, {"id": "it09", "line": "con", "parent": "g-canales", "group": false, "nombre": "Instalación Geonet", "cant": 41636, "unidad": "m2", "ppto": 125, "meses": 8, "c": {}, "flujo": {"2027-09": 15.625, "2027-10": 15.625, "2027-11": 15.625, "2027-12": 15.625, "CY28": 62.5}, "orden": 9}, {"id": "it10", "line": "con", "parent": "g-canales", "group": false, "nombre": "Alcantarillado y Drenaje (Obra de Arte)", "cant": null, "unidad": "", "ppto": 656, "meses": 2, "c": {}, "flujo": {"2027-09": 328, "2027-10": 328}, "orden": 10}, {"id": "it11", "line": "con", "parent": "g-canales", "group": false, "nombre": "Contrato Liberación UXOS", "cant": null, "unidad": "", "ppto": 204, "meses": null, "c": {}, "flujo": {"2027-09": 204}, "orden": 11}, {"id": "it12", "line": "con", "parent": null, "group": false, "nombre": "Construcción Piscina de Recuperación 45.000 m3", "cant": null, "unidad": "", "ppto": 3000, "meses": null, "c": {}, "flujo": {"2027-05": 500, "2027-06": 1000, "2027-07": 1000, "2027-08": 500}, "orden": 12}, {"id": "it13", "line": "con", "parent": null, "group": false, "nombre": "Construcción Pozos de Monitoreo 10\" 50 metros", "cant": null, "unidad": "", "ppto": 500, "meses": null, "c": {}, "flujo": {"2027-05": 100, "2027-06": 200, "2027-07": 200}, "orden": 13}, {"id": "it14", "line": "con", "parent": null, "group": false, "nombre": "Servicio Inspección ITO", "cant": null, "unidad": "", "ppto": 840, "meses": null, "c": {}, "flujo": {"2027-05": 70, "2027-06": 70, "2027-07": 70, "2027-08": 70, "2027-09": 70, "2027-10": 70, "2027-11": 70, "2027-12": 70, "CY28": 280}, "orden": 14}, {"id": "it15", "line": "con", "parent": null, "group": false, "nombre": "Alojamiento y Alimentación", "cant": null, "unidad": "", "ppto": 400, "meses": null, "c": {}, "flujo": {"2027-05": 30, "2027-06": 30, "2027-07": 40, "2027-08": 40, "2027-09": 40, "2027-10": 40, "2027-11": 30, "2027-12": 30, "CY28": 120}, "orden": 15}, {"id": "g-permisos", "line": "con", "parent": null, "group": true, "nombre": "Permisos", "cant": null, "unidad": "", "ppto": null, "meses": null, "c": {}, "flujo": {}, "orden": 16}, {"id": "it17", "line": "con", "parent": "g-permisos", "group": false, "nombre": "Rescate Arqueológico", "cant": null, "unidad": "", "ppto": 1003, "meses": null, "c": {}, "flujo": {"2027-01": 180, "2027-02": 180, "2027-03": 180, "2027-04": 190, "2027-05": 180, "2027-07": 8.8, "CY28": 84.2}, "orden": 17}, {"id": "it18", "line": "adq", "parent": null, "group": false, "nombre": "Suministro Geomembrana y Geotextil Piscina", "cant": null, "unidad": "", "ppto": 200, "meses": null, "c": {}, "flujo": {"2027-05": 200}, "orden": 18}, {"id": "it19", "line": "adq", "parent": null, "group": false, "nombre": "Suministro Geomembrana y Geotextil Canales (1.154 por AED)", "cant": null, "unidad": "", "ppto": 1100, "meses": null, "c": {}, "flujo": {"2027-05": 500, "2027-06": 600}, "orden": 19}, {"id": "it20", "line": "own", "parent": null, "group": false, "nombre": "Owner ANT (10%)", "cant": null, "unidad": "", "ppto": 1716.6, "meses": null, "c": {}, "flujo": {"2027-09": 179.988, "2027-10": 159.588, "2027-11": 125.788, "2027-12": 125.788, "CY28": 511.57, "2027-05": 158.0, "2027-06": 190.0, "2027-07": 131.88, "2027-08": 61.0, "2027-01": 18.0, "2027-02": 18.0, "2027-03": 18.0, "2027-04": 19.0}, "orden": 20}]}]}</script>
+<script id="datos" type="application/json">{"exportado": "2026-10-26T20:55:55Z", "proyectos": [{"id": "c27-rom-lp", "desc": "ROM Largo Plazo", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "Enrique Pino", "jefeIng": "Lorena Rojas", "monto": 1766.1, "nombre": "ROM LP", "orden": 1, "pep": "", "tipo": "C3"}, {"id": "c27-sulfuros", "desc": "Sulfuros Primarios", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "TBD", "jefeIng": "Lorena Rojas", "monto": 1644.5, "nombre": "Sulfuros Primarios", "orden": 2, "pep": "", "tipo": "C3"}, {"id": "c27-scp-f2", "desc": "SCP Fase 2", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "Eduardo Leiva", "jefeIng": "Evelyn Herlitz", "monto": 1461.6, "nombre": "SCP Fase 2", "orden": 3, "pep": "", "tipo": "C3"}, {"id": "c27-84-modulos", "desc": "PFS 84 Módulos Heap Leach", "etapas": {}, "fase": "PFS", "gates": {}, "jefeEje": "Enrique Pino", "jefeIng": "Evelyn Herlitz", "monto": 500, "nombre": "84 Módulos", "orden": 4, "pep": "", "tipo": "C3"}, {"id": "c27-planta-ro", "desc": "PFS Planta RO", "etapas": {}, "fase": "PFS", "gates": {}, "jefeEje": "TBD", "jefeIng": "Cristian Díaz", "monto": 100, "nombre": "Planta RO", "orden": 5, "pep": "", "tipo": "C3"}, {"id": "c27-ptas", "actualizado": "2026-10-20T19:45:29.555Z", "desc": "PFS Mejoramiento PTAS 3400", "etapas": {}, "fase": "PFS", "gates": {}, "jefeEje": "TBD", "jefeIng": "Cristian Díaz", "monto": 200, "nombre": "PTAS", "orden": 6, "pep": "", "tipo": "C3"}, {"id": "c27-carro-cv007", "desc": "PFS Levantamiento Solución Definitiva Carro CV 007", "etapas": {"bd": "ok", "inputs": "ok", "p30": "ok", "p60": "ok", "p90": "pin", "prep": "ok", "rev": "ok"}, "fase": "PFS", "gates": {}, "jefeEje": "TBD", "jefeIng": "Maximilian Campaña", "monto": 232, "nombre": "Carro CV 007", "orden": 7, "pep": "", "tipo": "C3"}, {"id": "c27-piscina-refino", "desc": "PFS Reparación Geomembrana Piscina Refino", "etapas": {}, "fase": "PFS", "gates": {}, "jefeEje": "TBD", "jefeIng": "Maximilian Campaña", "monto": 250, "nombre": "Piscina refino", "orden": 8, "pep": "", "tipo": "C3"}, {"id": "c27-taller-cables", "desc": "PFS Normalización Taller Reparación de cables Mina", "etapas": {}, "fase": "PFS", "gates": {}, "jefeEje": "TBD", "jefeIng": "Cristian Díaz", "monto": 50, "nombre": "Taller Reparación Cables Mina", "orden": 9, "pep": "", "tipo": "C3"}, {"id": "c27-calaminas-sx", "desc": "PFS Calaminas Laterales SX (Delivery Project)", "etapas": {}, "fase": "PFS", "gates": {}, "jefeEje": "TBD", "jefeIng": "Cristian Díaz", "monto": 50, "nombre": "Calaminas Laterales SX", "orden": 10, "pep": "", "tipo": "C3"}, {"id": "c27-linea-pls", "desc": "PFS Línea PLS", "etapas": {"bd": "ok", "inputs": "ok", "p30": "pin", "prep": "ok"}, "fase": "PFS", "gates": {}, "jefeEje": "TBD", "jefeIng": "Cristian Díaz", "monto": 80, "nombre": "Línea PLS", "orden": 11, "pep": "", "tipo": "C3"}, {"id": "c27-tambor", "desc": "Estudio Vibraciones Tambor Aglomerador", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "Lorena Rojas", "monto": 80, "nombre": "Tambor Aglomerador", "orden": 12, "pep": "", "tipo": "C3"}, {"id": "c26-cuprochlor-t-brs", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "Cuprochlor T-BRS", "orden": 2026001, "pep": "1003-24AD209 / 1003-25AD201 / 1003-26AD202", "tipo": "C3"}, {"id": "c26-sulfuros-primarios", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "Sulfuros Primarios", "orden": 2026002, "pep": "1003-26AD203", "tipo": "C3"}, {"id": "c26-descarbonizacion-tambor", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "Descarbonización Tambor", "orden": 2026003, "pep": "S/PEP", "tipo": "C3"}, {"id": "c26-rom-estatico-lp", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "ROM Estático LP", "orden": 2026004, "pep": "S/PEP", "tipo": "C3"}, {"id": "c26-rom-cp-lp-cuprochlor-t-brs", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "ROM CP-LP-Cuprochlor T-BRS", "orden": 2026005, "pep": "1003-26AD205", "tipo": "C3"}, {"id": "c26-ripios-fase-2", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "Ripios Fase 2", "orden": 2026006, "pep": "1003AD3002/61 / 1003-26AD201", "tipo": "C3"}, {"id": "c26-tap-off-s-e", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "Tap OFF S/E", "orden": 2026007, "pep": "", "tipo": "C3"}, {"id": "c26-scp-fase-3", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "SCP Fase 3", "orden": 2026008, "pep": "", "tipo": "C3"}, {"id": "c26-canales-de-contorno", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "Canales de Contorno", "orden": 2026009, "pep": "1003-26AD208", "tipo": "C3"}, {"id": "c26-carro-cv007", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "Carro CV007", "orden": 2026010, "pep": "S/PEP", "tipo": "C3"}, {"id": "c26-sulfuros-primarios-ant-cacho", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "Sulfuros Primarios (ANT+Cachorro)", "orden": 2026011, "pep": "1003-26AD209", "tipo": "C3"}, {"id": "c26-stn-fase-diluido", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "STN Fase Diluido", "orden": 2026012, "pep": "S/PEP", "tipo": "C3"}, {"id": "c26-84-modulos", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "84 Módulos", "orden": 2026013, "pep": "S/PEP", "tipo": "C3"}, {"id": "c26-planta-ro", "actualizado": "2026-10-26T19:13:06.800Z", "anio": 2026, "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "Planta RO", "orden": 2026014, "pep": "S/PEP", "tipo": "C3"}, {"id": "k26-implementacion-solucion-ripio", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "E. Leiva", "jefeIng": "", "monto": null, "nombre": "Implementación Solución Ripio Fase 1 Etapa 2", "orden": 2026100, "pep": "1003-24PE427", "tipo": "Capex"}, {"id": "k26-reparacion-piscinas-pls-ils-20", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "E. Cabalín", "jefeIng": "", "monto": null, "nombre": "Reparación piscinas PLS - ILS 2026", "orden": 2026101, "pep": "1003-25PE404", "tipo": "Capex"}, {"id": "k26-reparacion-canaletas-lixiviaci", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "E. Pino", "jefeIng": "", "monto": null, "nombre": "Reparación canaletas lixiviación", "orden": 2026102, "pep": "1003-25PE402", "tipo": "Capex"}, {"id": "k26-extractor-de-gases-truck-shop", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "E. Cabalín", "jefeIng": "", "monto": null, "nombre": "Extractor de Gases Truck Shop", "orden": 2026103, "pep": "1003-23MI414", "tipo": "Capex"}, {"id": "k26-traslado-subestacion-electrica", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "E. Pino", "jefeIng": "", "monto": null, "nombre": "Traslado Subestación Eléctrica", "orden": 2026105, "pep": "1003-26MI414", "tipo": "Capex"}, {"id": "k26-mejora-sistema-incendio-area-h", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "E. Cabalín", "jefeIng": "", "monto": null, "nombre": "Mejora Sistema Incendio Área Húmeda", "orden": 2026106, "pep": "1003-23PE435", "tipo": "Capex"}, {"id": "k26-normalizacion-planta-de-tratam", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "C. Barrera/R. Jarpa", "jefeIng": "", "monto": null, "nombre": "Normalización Planta de Tratamiento de Aguas Servidas (PTAS)", "orden": 2026107, "pep": "1003-25PE424", "tipo": "Capex"}, {"id": "k26-ejecucion-casa-de-cambio-truck", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "C. Barrera/R. Jarpa", "jefeIng": "", "monto": null, "nombre": "Ejecución Casa de cambio truck shop", "orden": 2026108, "pep": "1003-25MI412", "tipo": "Capex"}, {"id": "k26-factibilidad-scp-fase-3-ch-1", "anio": 2026, "categoria": "Ingeniería", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "A. Tapia", "jefeIng": "", "monto": null, "nombre": "Factibilidad SCP Fase 3 (CH° 1°)", "orden": 2026109, "pep": "1003-25PE413", "tipo": "Capex"}, {"id": "k26-cambio-calaminas-laterales-sx", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "E. Cabalín", "jefeIng": "", "monto": null, "nombre": "Cambio calaminas laterales SX-EW", "orden": 2026110, "pep": "1003-22PE401", "tipo": "Capex"}, {"id": "k26-aumento-capacidad-stn-fase-dil", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "E. Leiva", "jefeIng": "", "monto": null, "nombre": "Aumento Capacidad STN fase diluido", "orden": 2026111, "pep": "", "tipo": "Capex"}, {"id": "k26-techo-decantadores-sx", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "C. Barrera/R. Jarpa", "jefeIng": "", "monto": null, "nombre": "Techo decantadores SX", "orden": 2026112, "pep": "", "tipo": "Capex"}, {"id": "k26-ampliacion-rom-dinamico-3-pila", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "C. Barrera/R. Jarpa", "jefeIng": "", "monto": null, "nombre": "Ampliación ROM Dinámico 3 Pilas", "orden": 2026113, "pep": "1003-22PE464", "tipo": "Capex"}, {"id": "k26-termos-solares", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "C. Barrera/R. Jarpa", "jefeIng": "", "monto": null, "nombre": "Termos Solares", "orden": 2026114, "pep": "", "tipo": "Capex"}, {"id": "k26-ejecucion-barrio-civico", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "E. Pino", "jefeIng": "", "monto": null, "nombre": "Ejecución Barrio Cívico", "orden": 2026115, "pep": "", "tipo": "Capex"}, {"id": "k26-fs-canales-de-contorno", "anio": 2026, "categoria": "Ingeniería", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "A. Tapia", "jefeIng": "", "monto": null, "nombre": "FS Canales de contorno", "orden": 2026116, "pep": "1003-26AD403", "tipo": "Capex"}, {"id": "k26-loop-aspirado", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "E. Pino", "jefeIng": "", "monto": null, "nombre": "Loop Aspirado", "orden": 2026117, "pep": "1003-26PE406", "tipo": "Capex"}, {"id": "k26-acceso-modulo-38-y-39-hip-leac", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "E. Pino", "jefeIng": "", "monto": null, "nombre": "Acceso Módulo 38 y 39 Hip Leach", "orden": 2026118, "pep": "1003-26PE411", "tipo": "Capex"}, {"id": "k26-factibilidad-rom-estatico-c-p", "anio": 2026, "categoria": "Ingeniería", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "L. Rojas", "jefeIng": "", "monto": null, "nombre": "Factibilidad ROM Estático (C/P)", "orden": 2026119, "pep": "1003-24PE300", "tipo": "Capex"}, {"id": "k26-techumbre-carro-bomba", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "C. Barrera/R. Jarpa", "jefeIng": "", "monto": null, "nombre": "Techumbre carro bomba", "orden": 2026120, "pep": "1003-26AD408", "tipo": "Capex"}, {"id": "k26-policlinico-fs", "actualizado": "2026-10-26T19:37:44.085Z", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "A. Tapia", "jefeIng": "", "monto": null, "nombre": "Policlínico (FS)", "orden": 2026121, "pep": "1003-26AD404", "tipo": "Capex"}, {"id": "k26-ejecucion-sistema-colector-pol", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "Ejecución Sistema Colector Polvos Fase 1", "orden": 2026123, "pep": "1003-22AD402", "tipo": "Capex"}, {"id": "k26-reparacion-piscina-de-pls", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "Reparación Piscina de PLS", "orden": 2026124, "pep": "1003-24PE415", "tipo": "Capex"}, {"id": "k26-cargadores-para-grua-horquilla", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "Cargadores para Grúa Horquilla", "orden": 2026125, "pep": "1003-25PE421", "tipo": "Capex"}, {"id": "k26-consolas-carro-cv-007", "anio": 2026, "categoria": "Construcción", "desc": "", "etapas": {}, "fase": "", "gates": {}, "jefeEje": "", "jefeIng": "", "monto": null, "nombre": "Consolas Carro CV 007", "orden": 2026126, "pep": "1003-26PE408", "tipo": "Capex"}], "ajustes": [{"id": "rescate-monumentos", "nombre": "Canal de Contorno Ripios Fase 2", "desc": "Rescate de Monumentos Nacionales (Ripios Fase 2) · Permisos", "tipo": "C3", "monto": -1198.4, "orden": 1}, {"id": "ensayos-geotecnicos", "nombre": "Ensayos Geotécnicos Ripios Fase 2", "desc": "Ensayos", "tipo": "C3", "monto": -47.6, "orden": 2}, {"id": "linea-acido-sx", "nombre": "Línea Ácido SX", "desc": "PFS Línea Ácido SX · Estudio", "tipo": "C3", "monto": -119.8, "orden": 3}], "iniciativas": [{"id": "i26-planta-ro-1", "actualizado": "2026-10-26T20:00:55.446Z", "cb": null, "ejercicios": {"8+4": 170, "9+3": 170}, "etapas": {"prep": "run"}, "f93": {"2026-11": 70, "2026-12": 100}, "inicio": "", "kind": "ing", "nombre": "PFS Planta RO", "oc": "", "orden": 1, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": null, "proveedor": "", "proyectoId": "c26-planta-ro", "proym": {"2026-10": 0, "2026-11": 70, "2026-12": 100}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i-k26-implementacion-solucion-ripio-1", "cb": null, "ejercicios": {"3+9": 17978, "6+6": 19013, "8+4": 26285, "9+3": 25709, "Ppto 2026": 16828}, "etapas": {}, "f93": {"2026-01": 122, "2026-02": 681, "2026-03": 969, "2026-04": 1123, "2026-05": 1051, "2026-06": 1997, "2026-07": 1186, "2026-08": 2631, "2026-09": 1203, "2026-10": 600, "2026-11": 5723, "2026-12": 8423}, "inicio": "", "kind": "con", "nombre": "Implementación Solución Ripio Fase 1 Etapa 2", "oc": "", "orden": 1, "plan": {"2026-01": 755.3, "2026-02": 1096.9, "2026-03": 1298.4, "2026-04": 2425.1, "2026-05": 1926.4, "2026-06": 2060.1, "2026-07": 2764, "2026-08": 1514.4, "2026-09": 1200.8, "2026-10": 1786.4}, "ppto": 16827.8, "proveedor": "", "proyectoId": "k26-implementacion-solucion-ripio", "realm": {"2026-01": 122, "2026-02": 681, "2026-03": 969, "2026-04": 1123, "2026-05": 1051, "2026-06": 1997, "2026-07": 1186, "2026-08": 2631, "2026-09": 1203}, "responsable": "E. Leiva", "termino": ""}, {"id": "i-k26-ejecucion-barrio-civico-1", "cb": null, "ejercicios": {"3+9": 157, "6+6": 0, "8+4": 0, "9+3": 0, "Ppto 2026": 316}, "etapas": {}, "f93": {}, "inicio": "", "kind": "con", "nombre": "Ejecución Barrio Cívico", "oc": "", "orden": 1, "plan": {"2026-06": 52.7, "2026-07": 52.7, "2026-08": 37.8, "2026-09": 64.4, "2026-10": 55.2, "2026-11": 53.5}, "ppto": 316.3, "proveedor": "", "proyectoId": "k26-ejecucion-barrio-civico", "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "E. Pino", "termino": ""}, {"id": "i-k26-factibilidad-rom-estatico-c-p-1", "actualizado": "2026-10-26T20:01:50.376Z", "cb": null, "ejercicios": {"3+9": 150, "6+6": 150, "8+4": 250, "9+3": 250, "Ppto 2026": 100}, "etapas": {"bd": "ok", "inputs": "ok", "p30": "ok", "p60": "ok", "prep": "ok"}, "f93": {"2026-02": 2, "2026-04": 13, "2026-05": 22, "2026-06": 10, "2026-07": 3, "2026-08": 20, "2026-09": 26, "2026-10": 30, "2026-11": 54, "2026-12": 70}, "inicio": "", "kind": "ing", "nombre": "Factibilidad ROM Estático (C/P)", "oc": "", "orden": 1, "plan": {"2026-08": 25, "2026-09": 25, "2026-10": 25, "2026-11": 25}, "ppto": 100, "proveedor": "", "proyectoId": "k26-factibilidad-rom-estatico-c-p", "real": {"bd": "2026-10-26", "inputs": "2026-10-26", "p30": "2026-10-26", "p60": "2026-10-26", "prep": "2026-10-26"}, "realm": {"2026-01": 0, "2026-02": 2, "2026-03": 0, "2026-04": 13, "2026-05": 22, "2026-06": 10, "2026-07": 3, "2026-08": 20, "2026-09": 26}, "responsable": "L. Rojas", "termino": ""}, {"id": "i-taller-cables-1", "cb": 50, "etapas": {}, "inicio": "", "kind": "ing", "nombre": "PFS Normalización Taller Reparación de cables Mina", "oc": "", "orden": 1, "ppto": 50, "proveedor": "", "proyectoId": "c27-taller-cables", "responsable": "", "termino": ""}, {"id": "i-tambor-1", "cb": 80, "etapas": {}, "inicio": "", "kind": "ing", "nombre": "Estudio Vibraciones Tambor Aglomerador", "oc": "", "orden": 1, "ppto": 80, "proveedor": "", "proyectoId": "c27-tambor", "responsable": "", "termino": ""}, {"id": "i-k26-loop-aspirado-1", "cb": null, "ejercicios": {"3+9": 211, "6+6": 212, "8+4": 403, "9+3": 393, "Ppto 2026": 204}, "etapas": {}, "f93": {"2026-05": 8, "2026-08": 1, "2026-11": 210, "2026-12": 174}, "inicio": "", "kind": "con", "nombre": "Loop Aspirado", "oc": "", "orden": 1, "plan": {"2026-05": 30.7, "2026-06": 36.8, "2026-07": 24.5, "2026-08": 30.7, "2026-09": 40.9, "2026-10": 40.9}, "ppto": 204.5, "proveedor": "", "proyectoId": "k26-loop-aspirado", "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 8, "2026-06": 0, "2026-07": 0, "2026-08": 1, "2026-09": 0}, "responsable": "E. Pino", "termino": ""}, {"id": "i26-sulfuros-primarios-1", "actualizado": "2026-10-26T19:56:07.597Z", "cb": null, "ejercicios": {"3+9": 550, "6+6": 550, "8+4": 260, "9+3": 260, "C3 Reproceso": 550}, "etapas": {"bd": "ok", "inputs": "ok", "p30": "ok", "p60": "ok", "prep": "ok"}, "f93": {"2026-09": 47, "2026-10": 71, "2026-11": 83, "2026-12": 59}, "inicio": "", "kind": "ing", "nombre": "Estudio Perfil Cuprochlor / Concentradora (TO)", "oc": "", "orden": 1, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": 55, "2026-07": 82.5, "2026-08": 137.5, "2026-09": 137.5, "2026-10": 82.5, "2026-11": 55, "2026-12": null}, "ppto": 550, "proveedor": "", "proyectoId": "c26-sulfuros-primarios", "proym": {"2026-10": 71, "2026-11": 83, "2026-12": 59}, "real": {"bd": "2026-10-26", "inputs": "2026-10-26", "p30": "2026-10-26", "p60": "2026-10-26", "prep": "2026-10-26"}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 47}, "responsable": "", "termino": ""}, {"id": "i26-rom-estatico-lp-1", "actualizado": "2026-10-26T19:56:32.019Z", "cb": null, "ejercicios": {"3+9": 0, "6+6": 0, "8+4": 382.5, "9+3": 382.5, "C3 Reproceso": 0}, "etapas": {"prep": "run"}, "f93": {"2026-07": 6, "2026-08": 6, "2026-09": 3, "2026-10": 95.7, "2026-11": 101, "2026-12": 170.8}, "inicio": "", "kind": "ing", "nombre": "PFS ROM Estático Largo Plazo", "oc": "", "orden": 1, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": null, "proveedor": "", "proyectoId": "c26-rom-estatico-lp", "proym": {"2026-10": 95.7, "2026-11": 101, "2026-12": 170.8}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 6, "2026-08": 6, "2026-09": 3}, "responsable": "", "termino": ""}, {"id": "i26-rom-cp-lp-cuprochlor-t-brs-1", "actualizado": "2026-10-26T19:57:49.169Z", "cb": null, "ejercicios": {"3+9": 330, "6+6": 330, "8+4": 215.5, "9+3": 210.4, "C3 Reproceso": 230}, "etapas": {"bases": "ok", "informe": "pend", "lab": "run", "muestreo": "ok", "oc": "ok"}, "f93": {"2026-07": 23, "2026-08": 23, "2026-09": 24.6, "2026-10": 27.4, "2026-11": 43, "2026-12": 69.5}, "inicio": "", "kind": "ens", "nombre": "Ensayos geotécnicos ROM-Cuprochlor", "oc": "", "orden": 1, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": 28.8, "2026-06": 28.8, "2026-07": 23, "2026-08": 23, "2026-09": 23, "2026-10": 46, "2026-11": 34.5, "2026-12": 23}, "ppto": 230.1, "proveedor": "", "proyectoId": "c26-rom-cp-lp-cuprochlor-t-brs", "proym": {"2026-10": 27.4, "2026-11": 43, "2026-12": 69.5}, "real": {"bases": "2026-10-26", "muestreo": "2026-10-26", "oc": "2026-10-26"}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 23, "2026-08": 23, "2026-09": 24.6}, "responsable": "", "termino": ""}, {"id": "i26-stn-fase-diluido-1", "cb": null, "ejercicios": {"3+9": 50, "6+6": 50, "8+4": 60, "9+3": 60}, "etapas": {}, "f93": {"2026-11": 30, "2026-12": 30}, "inicio": "", "kind": "ing", "nombre": "Medición STN Fase Diluido", "oc": "", "orden": 1, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": null, "proveedor": "", "proyectoId": "c26-stn-fase-diluido", "proym": {"2026-10": 0, "2026-11": 30, "2026-12": 30}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i-k26-mejora-sistema-incendio-area-h-1", "cb": null, "ejercicios": {"3+9": 1139, "6+6": 1019, "8+4": 1020, "9+3": 1019, "Ppto 2026": 1042}, "etapas": {}, "f93": {"2026-01": 94, "2026-02": 84, "2026-03": 48, "2026-04": 216, "2026-05": 173, "2026-06": 141, "2026-07": 138, "2026-10": 20, "2026-11": 104}, "inicio": "", "kind": "con", "nombre": "Mejora Sistema Incendio Área Húmeda", "oc": "", "orden": 1, "plan": {"2026-01": 227.7, "2026-02": 268.8, "2026-03": 217.7, "2026-04": 161.1, "2026-05": 166.5}, "ppto": 1041.8, "proveedor": "", "proyectoId": "k26-mejora-sistema-incendio-area-h", "realm": {"2026-01": 94, "2026-02": 84, "2026-03": 48, "2026-04": 216, "2026-05": 173, "2026-06": 141, "2026-07": 138, "2026-08": 0, "2026-09": 0}, "responsable": "E. Cabalín", "termino": ""}, {"id": "i-linea-pls-1", "cb": 80, "etapas": {"bd": "ok", "inputs": "ok", "p30": "pin", "prep": "ok"}, "inicio": "", "kind": "ing", "nombre": "PFS Línea PLS", "oc": "", "orden": 1, "ppto": 80, "proveedor": "", "proyectoId": "c27-linea-pls", "responsable": "", "termino": ""}, {"id": "i26-tap-off-s-e-1", "actualizado": "2026-10-26T19:59:50.155Z", "cb": null, "ejercicios": {"3+9": 66.5, "6+6": 66.5, "8+4": 55.2, "9+3": 55.2, "C3 Reproceso": 66.5}, "etapas": {"bd": "ok", "cierre": "ok", "ifc": "ok", "inputs": "ok", "p30": "ok", "p60": "ok", "p90": "ok", "prep": "ok", "rev": "ok"}, "f93": {"2026-01": 22.8, "2026-02": 0.5, "2026-06": 32}, "inicio": "", "kind": "ing", "nombre": "Tap Off S/E Seccionadora", "oc": "", "orden": 1, "plan": {"2026-01": 17.5, "2026-02": 29, "2026-03": 20, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": 66.5, "proveedor": "", "proyectoId": "c26-tap-off-s-e", "proym": {"2026-10": 0, "2026-11": 0, "2026-12": 0}, "real": {"bd": "2026-10-26", "cierre": "2026-10-26", "ifc": "2026-10-26", "inputs": "2026-10-26", "p30": "2026-10-26", "p60": "2026-10-26", "p90": "2026-10-26", "prep": "2026-10-26", "rev": "2026-10-26"}, "realm": {"2026-01": 22.8, "2026-02": 0.5, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 32, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i-planta-ro-1", "cb": 100, "etapas": {}, "inicio": "", "kind": "ing", "nombre": "PFS Planta RO", "oc": "", "orden": 1, "ppto": 100, "proveedor": "", "proyectoId": "c27-planta-ro", "responsable": "", "termino": ""}, {"id": "i-k26-reparacion-piscinas-pls-ils-20-1", "cb": null, "ejercicios": {"3+9": 4441, "6+6": 4333, "8+4": 3539, "9+3": 3186, "Ppto 2026": 6290}, "etapas": {}, "f93": {"2026-01": 5, "2026-02": 47, "2026-03": 163, "2026-04": 64, "2026-05": 97, "2026-06": 1065, "2026-07": 562, "2026-08": 416, "2026-09": 197, "2026-10": 230, "2026-11": 170, "2026-12": 170}, "inicio": "", "kind": "con", "nombre": "Reparación piscinas PLS - ILS 2026", "oc": "", "orden": 1, "plan": {"2026-03": 407.8, "2026-04": 23.7, "2026-05": 216.9, "2026-06": 319.1, "2026-07": 472.4, "2026-08": 676.8, "2026-09": 881.2, "2026-10": 983.1, "2026-11": 981.1, "2026-12": 1327.5}, "ppto": 6289.6, "proveedor": "", "proyectoId": "k26-reparacion-piscinas-pls-ils-20", "realm": {"2026-01": 5, "2026-02": 47, "2026-03": 163, "2026-04": 64, "2026-05": 97, "2026-06": 1065, "2026-07": 562, "2026-08": 416, "2026-09": 197}, "responsable": "E. Cabalín", "termino": ""}, {"id": "i-ptas-1", "cb": 200, "etapas": {}, "inicio": "", "kind": "ing", "nombre": "PFS Mejoramiento PTAS 3400", "oc": "", "orden": 1, "ppto": 200, "proveedor": "", "proyectoId": "c27-ptas", "responsable": "", "termino": ""}, {"id": "i-k26-extractor-de-gases-truck-shop-1", "cb": null, "ejercicios": {"3+9": 2153, "6+6": 2186, "8+4": 1966, "9+3": 2070, "Ppto 2026": 2118}, "etapas": {}, "f93": {"2026-01": 241, "2026-02": 268, "2026-03": 116, "2026-04": 140, "2026-05": 630, "2026-06": 151, "2026-07": 38, "2026-08": 42, "2026-09": 1, "2026-10": 29, "2026-11": 86, "2026-12": 331}, "inicio": "", "kind": "con", "nombre": "Extractor de Gases Truck Shop", "oc": "", "orden": 1, "plan": {"2026-01": 403, "2026-02": 445.6, "2026-03": 426.5, "2026-04": 496.1, "2026-05": 295.3, "2026-06": 51.5}, "ppto": 2118, "proveedor": "", "proyectoId": "k26-extractor-de-gases-truck-shop", "realm": {"2026-01": 241, "2026-02": 268, "2026-03": 116, "2026-04": 140, "2026-05": 630, "2026-06": 151, "2026-07": 38, "2026-08": 42, "2026-09": 1}, "responsable": "E. Cabalín", "termino": ""}, {"id": "i-k26-aumento-capacidad-stn-fase-dil-1", "cb": null, "ejercicios": {"3+9": 0, "6+6": 0, "8+4": 0, "9+3": 0, "Ppto 2026": 511}, "etapas": {}, "f93": {}, "inicio": "", "kind": "con", "nombre": "Aumento Capacidad STN fase diluido", "oc": "", "orden": 1, "plan": {"2026-04": 76.6, "2026-05": 127.7, "2026-06": 178.8, "2026-07": 127.7}, "ppto": 510.8, "proveedor": "", "proyectoId": "k26-aumento-capacidad-stn-fase-dil", "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "E. Leiva", "termino": ""}, {"id": "i-carro-cv007-1", "cb": 232, "etapas": {"bd": "ok", "inputs": "ok", "p30": "ok", "p60": "ok", "p90": "pin", "prep": "ok", "rev": "ok"}, "inicio": "", "kind": "ing", "nombre": "PFS Levantamiento Solución Definitiva Carro CV 007", "oc": "", "orden": 1, "ppto": 232, "proveedor": "", "proyectoId": "c27-carro-cv007", "responsable": "", "termino": ""}, {"id": "i26-sulfuros-primarios-ant-cacho-1", "actualizado": "2026-10-26T20:00:44.903Z", "cb": null, "ejercicios": {"3+9": 250, "6+6": 320, "8+4": 320, "9+3": 320}, "etapas": {"bd": "run", "inputs": "ok", "prep": "ok"}, "f93": {"2026-07": 3, "2026-08": 155.5, "2026-09": 90.5, "2026-10": 64, "2026-11": 4, "2026-12": 3.1}, "inicio": "", "kind": "ing", "nombre": "Estudio PEA Sulfuro Primario", "oc": "", "orden": 1, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": null, "proveedor": "", "proyectoId": "c26-sulfuros-primarios-ant-cacho", "proym": {"2026-10": 64, "2026-11": 4, "2026-12": 3.1}, "real": {"inputs": "2026-10-26", "prep": "2026-10-26"}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 3, "2026-08": 155.5, "2026-09": 90.5}, "responsable": "", "termino": ""}, {"id": "i-k26-fs-canales-de-contorno-1", "actualizado": "2026-10-26T20:01:38.058Z", "cb": null, "ejercicios": {"3+9": 487, "6+6": 470, "8+4": 470, "9+3": 468, "Ppto 2026": 204}, "etapas": {"bd": "ok", "inputs": "ok", "p30": "ok", "p60": "run", "prep": "ok"}, "f93": {"2026-05": 20, "2026-06": 24, "2026-07": 26, "2026-08": 57, "2026-09": 87, "2026-10": 56, "2026-11": 80, "2026-12": 119}, "inicio": "", "kind": "ing", "nombre": "FS Canales de contorno", "oc": "", "orden": 1, "plan": {"2026-04": 30.7, "2026-05": 40.9, "2026-06": 25.5, "2026-07": 30.7, "2026-08": 35.8, "2026-09": 40.9}, "ppto": 204.5, "proveedor": "", "proyectoId": "k26-fs-canales-de-contorno", "real": {"bd": "2026-10-26", "inputs": "2026-10-26", "p30": "2026-10-26", "prep": "2026-10-26"}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 20, "2026-06": 24, "2026-07": 26, "2026-08": 57, "2026-09": 87}, "responsable": "A. Tapia", "termino": ""}, {"id": "i-scp-pfs", "cb": 826, "etapas": {}, "inicio": "", "kind": "ing", "nombre": "PFS SCP Fase 2 (CH° 3°) + Solución aumento capacidad", "oc": "", "orden": 1, "ppto": 921.9, "proveedor": "", "proyectoId": "c27-scp-f2", "responsable": "", "termino": ""}, {"id": "i-k26-ampliacion-rom-dinamico-3-pila-1", "cb": null, "ejercicios": {"3+9": 293, "6+6": 294, "8+4": 303, "9+3": 297, "Ppto 2026": 320}, "etapas": {}, "f93": {"2026-01": 66, "2026-06": 8, "2026-07": 20, "2026-08": 92, "2026-09": 13, "2026-10": 33, "2026-11": 65}, "inicio": "", "kind": "con", "nombre": "Ampliación ROM Dinámico 3 Pilas", "oc": "", "orden": 1, "plan": {"2026-02": 50, "2026-03": 58, "2026-04": 30, "2026-05": 50, "2026-06": 50, "2026-07": 40, "2026-08": 42}, "ppto": 320, "proveedor": "", "proyectoId": "k26-ampliacion-rom-dinamico-3-pila", "realm": {"2026-01": 66, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 8, "2026-07": 20, "2026-08": 92, "2026-09": 13}, "responsable": "C. Barrera/R. Jarpa", "termino": ""}, {"id": "i-k26-termos-solares-1", "cb": null, "ejercicios": {"3+9": 0, "6+6": 0, "8+4": 0, "9+3": 0, "Ppto 2026": 319}, "etapas": {}, "f93": {}, "inicio": "", "kind": "con", "nombre": "Termos Solares", "oc": "", "orden": 1, "plan": {"2026-05": 15.9, "2026-06": 31.9, "2026-07": 47.8, "2026-08": 79.7, "2026-09": 79.7, "2026-10": 63.8}, "ppto": 318.8, "proveedor": "", "proyectoId": "k26-termos-solares", "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "C. Barrera/R. Jarpa", "termino": ""}, {"id": "i-k26-policlinico-fs-1", "cb": null, "ejercicios": {"3+9": 53, "6+6": 51, "8+4": 53, "9+3": 53, "Ppto 2026": 51}, "etapas": {}, "f93": {"2026-08": 53}, "inicio": "", "kind": "ing", "nombre": "Policlínico (FS)", "oc": "", "orden": 1, "plan": {"2026-05": 10.2, "2026-06": 10.2, "2026-07": 10.2, "2026-08": 10.2, "2026-09": 10.2}, "ppto": 51, "proveedor": "", "proyectoId": "k26-policlinico-fs", "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 53, "2026-09": 0}, "responsable": "A. Tapia", "termino": ""}, {"id": "i26-descarbonizacion-tambor-1", "actualizado": "2026-10-26T19:56:20.930Z", "cb": null, "ejercicios": {"3+9": 150, "6+6": 70, "8+4": 56, "9+3": 56, "C3 Reproceso": 500}, "etapas": {"prep": "run"}, "f93": {"2026-11": 28, "2026-12": 28}, "inicio": "", "kind": "ing", "nombre": "PFS Descarbonización Aglom", "oc": "", "orden": 1, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": 50, "2026-08": 100, "2026-09": 125, "2026-10": 150, "2026-11": 75, "2026-12": null}, "ppto": 500, "proveedor": "", "proyectoId": "c26-descarbonizacion-tambor", "proym": {"2026-10": 0, "2026-11": 28, "2026-12": 28}, "real": {"prep": ""}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i-romlp-pfs", "cb": 459.5, "etapas": {}, "inicio": "", "kind": "ing", "nombre": "PFS ROM Largo Plazo", "oc": "", "orden": 1, "ppto": 459.5, "proveedor": "", "proyectoId": "c27-rom-lp", "responsable": "", "termino": ""}, {"id": "i-piscina-refino-1", "cb": 250, "etapas": {}, "inicio": "", "kind": "ing", "nombre": "PFS Reparación Geomembrana Piscina Refino", "oc": "", "orden": 1, "ppto": 250, "proveedor": "", "proyectoId": "c27-piscina-refino", "responsable": "", "termino": ""}, {"id": "i-calaminas-sx-1", "cb": 50, "etapas": {}, "inicio": "", "kind": "ing", "nombre": "PFS Calaminas Laterales SX (Delivery Project)", "oc": "", "orden": 1, "ppto": 50, "proveedor": "", "proyectoId": "c27-calaminas-sx", "responsable": "", "termino": ""}, {"id": "i26-scp-fase-3-1", "cb": null, "ejercicios": {"3+9": 0, "6+6": 0, "8+4": 0, "9+3": 0, "C3 Reproceso": 0}, "etapas": {}, "f93": {}, "inicio": "", "kind": "ing", "nombre": "PFS SC Polvos Fase 3 (Ch° 1°) Ensayos y Mediciones Línea Base", "oc": "", "orden": 1, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": null, "proveedor": "", "proyectoId": "c26-scp-fase-3", "proym": {"2026-10": 0, "2026-11": 0, "2026-12": 0}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i26-carro-cv007-1", "cb": null, "ejercicios": {"3+9": 80, "6+6": 80, "8+4": 232, "9+3": 232}, "etapas": {}, "f93": {"2026-11": 115.5, "2026-12": 116.5}, "inicio": "", "kind": "ing", "nombre": "Levantamiento Plataforma CH3", "oc": "", "orden": 1, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": null, "proveedor": "", "proyectoId": "c26-carro-cv007", "proym": {"2026-10": 0, "2026-11": 115.5, "2026-12": 116.5}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i-k26-techo-decantadores-sx-1", "cb": null, "ejercicios": {"3+9": 423, "6+6": 0, "8+4": 0, "9+3": 0, "Ppto 2026": 409}, "etapas": {}, "f93": {}, "inicio": "", "kind": "con", "nombre": "Techo decantadores SX", "oc": "", "orden": 1, "plan": {"2026-07": 40.9, "2026-08": 40.9, "2026-09": 51.1, "2026-10": 112.4, "2026-11": 163.5}, "ppto": 408.8, "proveedor": "", "proyectoId": "k26-techo-decantadores-sx", "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "C. Barrera/R. Jarpa", "termino": ""}, {"id": "i-k26-traslado-subestacion-electrica-1", "cb": null, "ejercicios": {"3+9": 3275, "6+6": 3170, "8+4": 2438, "9+3": 2447, "Ppto 2026": 1124}, "etapas": {}, "f93": {"2026-03": 56, "2026-04": 1172, "2026-05": 655, "2026-06": 88, "2026-08": 348, "2026-09": 15, "2026-10": 29, "2026-11": 84}, "inicio": "", "kind": "con", "nombre": "Traslado Subestación Eléctrica", "oc": "", "orden": 1, "plan": {"2026-03": 30.7, "2026-04": 204.4, "2026-05": 275.9, "2026-06": 255.5, "2026-07": 357.7}, "ppto": 1124.2, "proveedor": "", "proyectoId": "k26-traslado-subestacion-electrica", "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 56, "2026-04": 1172, "2026-05": 655, "2026-06": 88, "2026-07": 0, "2026-08": 348, "2026-09": 15}, "responsable": "E. Pino", "termino": ""}, {"id": "i-k26-cambio-calaminas-laterales-sx-1", "cb": null, "ejercicios": {"3+9": 599, "6+6": 594, "8+4": 574, "9+3": 574, "Ppto 2026": 586}, "etapas": {}, "f93": {"2026-01": 33, "2026-02": 76, "2026-03": 78, "2026-04": 20, "2026-05": 133, "2026-06": 141, "2026-07": 28, "2026-12": 65}, "inicio": "", "kind": "con", "nombre": "Cambio calaminas laterales SX-EW", "oc": "", "orden": 1, "plan": {"2026-01": 107.5, "2026-02": 116.4, "2026-03": 362}, "ppto": 585.9, "proveedor": "", "proyectoId": "k26-cambio-calaminas-laterales-sx", "realm": {"2026-01": 33, "2026-02": 76, "2026-03": 78, "2026-04": 20, "2026-05": 133, "2026-06": 141, "2026-07": 28, "2026-08": 0, "2026-09": 0}, "responsable": "E. Cabalín", "termino": ""}, {"id": "i26-canales-de-contorno-1", "actualizado": "2026-10-26T20:00:13.529Z", "cb": null, "ejercicios": {"3+9": 1.8, "6+6": 1.8, "8+4": 1.8, "9+3": 1.8}, "etapas": {"bd": "ok", "cierre": "ok", "ifc": "ok", "inputs": "ok", "p30": "ok", "p60": "ok", "p90": "ok", "prep": "ok", "rev": "ok"}, "f93": {"2026-04": 1.8}, "inicio": "", "kind": "ing", "nombre": "NOC Taller de Riesgo PFS Canales de Contorno", "oc": "", "orden": 1, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": null, "proveedor": "", "proyectoId": "c26-canales-de-contorno", "proym": {"2026-10": 0, "2026-11": 0, "2026-12": 0}, "real": {"bd": "2026-10-26", "cierre": "2026-10-26", "ifc": "2026-10-26", "inputs": "2026-10-26", "p30": "2026-10-26", "p60": "2026-10-26", "p90": "2026-10-26", "prep": "2026-10-26", "rev": "2026-10-26"}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 1.8, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i-84-modulos-1", "cb": 500, "etapas": {}, "inicio": "", "kind": "ing", "nombre": "PFS 84 Módulos Heap Leach", "oc": "", "orden": 1, "ppto": 500, "proveedor": "", "proyectoId": "c27-84-modulos", "responsable": "", "termino": ""}, {"id": "i-k26-ejecucion-sistema-colector-pol-1", "cb": null, "ejercicios": {"3+9": 44, "6+6": 66, "8+4": 104, "9+3": 45}, "etapas": {}, "f93": {"2026-01": 32, "2026-02": 15, "2026-03": -2, "2026-04": 5, "2026-05": -9, "2026-06": 25, "2026-07": 19, "2026-08": 19, "2026-09": -59}, "inicio": "", "kind": "con", "nombre": "Ejecución Sistema Colector Polvos Fase 1", "oc": "", "orden": 1, "plan": {}, "ppto": null, "proveedor": "", "proyectoId": "k26-ejecucion-sistema-colector-pol", "realm": {"2026-01": 32, "2026-02": 15, "2026-03": -2, "2026-04": 5, "2026-05": -9, "2026-06": 25, "2026-07": 19, "2026-08": 19, "2026-09": -59}, "responsable": "", "termino": ""}, {"id": "i-k26-techumbre-carro-bomba-1", "cb": null, "ejercicios": {"3+9": 53, "6+6": 50, "8+4": 50, "9+3": 50, "Ppto 2026": 51}, "etapas": {}, "f93": {"2026-07": 8, "2026-08": 5, "2026-09": 10, "2026-10": 11, "2026-11": 15}, "inicio": "", "kind": "con", "nombre": "Techumbre carro bomba", "oc": "", "orden": 1, "plan": {"2026-08": 10.2, "2026-09": 20.4, "2026-10": 20.4}, "ppto": 51, "proveedor": "", "proyectoId": "k26-techumbre-carro-bomba", "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 8, "2026-08": 5, "2026-09": 10}, "responsable": "C. Barrera/R. Jarpa", "termino": ""}, {"id": "i-k26-cargadores-para-grua-horquilla-1", "cb": null, "ejercicios": {"3+9": 1, "6+6": -11, "8+4": -11, "9+3": -11}, "etapas": {}, "f93": {"2026-01": 2, "2026-04": -12}, "inicio": "", "kind": "con", "nombre": "Cargadores para Grúa Horquilla", "oc": "", "orden": 1, "plan": {}, "ppto": null, "proveedor": "", "proyectoId": "k26-cargadores-para-grua-horquilla", "realm": {"2026-01": 2, "2026-02": 0, "2026-03": 0, "2026-04": -12, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i-k26-acceso-modulo-38-y-39-hip-leac-1", "cb": null, "ejercicios": {"3+9": 413, "6+6": 400, "8+4": 407, "9+3": 400, "Ppto 2026": 199}, "etapas": {}, "f93": {"2026-06": 14, "2026-08": 8, "2026-10": 97, "2026-11": 134, "2026-12": 148}, "inicio": "", "kind": "con", "nombre": "Acceso Módulo 38 y 39 Hip Leach", "oc": "", "orden": 1, "plan": {"2026-05": 20.4, "2026-06": 35.8, "2026-07": 51.1, "2026-08": 40.9, "2026-09": 51.1}, "ppto": 199.3, "proveedor": "", "proyectoId": "k26-acceso-modulo-38-y-39-hip-leac", "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 14, "2026-07": 0, "2026-08": 8, "2026-09": 0}, "responsable": "E. Pino", "termino": ""}, {"id": "i26-ripios-fase-2-1", "cb": null, "ejercicios": {"3+9": 41, "6+6": 118.6, "8+4": 121.8, "9+3": 121.8, "C3 Reproceso": 41}, "etapas": {}, "f93": {"2026-01": 14.4, "2026-03": 2.8, "2026-05": 7.1, "2026-07": 23.3, "2026-08": 18.2, "2026-09": 8.4, "2026-10": 8.4, "2026-11": 16.8, "2026-12": 22.4}, "inicio": "", "kind": "ens", "nombre": "Ensayos Geotécnicos Ripios Fase 2", "oc": "", "orden": 1, "plan": {"2026-01": 41, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": 41, "proveedor": "", "proyectoId": "c26-ripios-fase-2", "proym": {"2026-10": 8.4, "2026-11": 16.8, "2026-12": 22.4}, "realm": {"2026-01": 14.4, "2026-02": 0, "2026-03": 2.8, "2026-04": 0, "2026-05": 7.1, "2026-06": 0, "2026-07": 23.3, "2026-08": 18.2, "2026-09": 8.4}, "responsable": "", "termino": ""}, {"id": "i26-84-modulos-1", "actualizado": "2026-10-26T20:00:50.554Z", "cb": null, "ejercicios": {"8+4": 280, "9+3": 280}, "etapas": {"prep": "run"}, "f93": {"2026-10": 2, "2026-11": 150, "2026-12": 128}, "inicio": "", "kind": "ing", "nombre": "PFS 84 Módulos", "oc": "", "orden": 1, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": null, "proveedor": "", "proyectoId": "c26-84-modulos", "proym": {"2026-10": 2, "2026-11": 150, "2026-12": 128}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i-k26-normalizacion-planta-de-tratam-1", "cb": null, "ejercicios": {"3+9": 1009, "6+6": 954, "8+4": 975, "9+3": 872, "Ppto 2026": 975}, "etapas": {}, "f93": {"2026-04": 2, "2026-06": 5, "2026-08": 28, "2026-09": 116, "2026-10": 216, "2026-11": 237, "2026-12": 268}, "inicio": "", "kind": "con", "nombre": "Normalización Planta de Tratamiento de Aguas Servidas (PTAS)", "oc": "", "orden": 1, "plan": {"2026-06": 148.2, "2026-07": 199.3, "2026-08": 178.8, "2026-09": 215.6, "2026-10": 233}, "ppto": 974.9, "proveedor": "", "proyectoId": "k26-normalizacion-planta-de-tratam", "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 2, "2026-05": 0, "2026-06": 5, "2026-07": 0, "2026-08": 28, "2026-09": 116}, "responsable": "C. Barrera/R. Jarpa", "termino": ""}, {"id": "i-k26-consolas-carro-cv-007-1", "cb": null, "ejercicios": {"6+6": 23, "8+4": 23, "9+3": 23}, "etapas": {}, "f93": {"2026-05": 23}, "inicio": "", "kind": "con", "nombre": "Consolas Carro CV 007", "oc": "", "orden": 1, "plan": {}, "ppto": null, "proveedor": "", "proyectoId": "k26-consolas-carro-cv-007", "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 23, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i26-cuprochlor-t-brs-1", "actualizado": "2026-10-26T19:55:49.000Z", "cb": null, "ejercicios": {"3+9": 75.5, "6+6": 75.5, "8+4": 75.7, "9+3": 75.7, "C3 Reproceso": 75.5}, "etapas": {"bd": "ok", "cierre": "ok", "ifc": "ok", "inputs": "ok", "p30": "ok", "p60": "ok", "p90": "ok", "prep": "ok", "rev": "ok"}, "f93": {"2026-01": 0.5, "2026-02": 6.9, "2026-03": 57.4, "2026-04": 6, "2026-05": 5}, "inicio": "", "kind": "ing", "nombre": "Perfil Cuprochlor", "oc": "", "orden": 1, "plan": {"2026-01": 20, "2026-02": 30, "2026-03": 25.5, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": 75.5, "proveedor": "", "proyectoId": "c26-cuprochlor-t-brs", "proym": {"2026-10": 0, "2026-11": 0, "2026-12": 0}, "real": {"bd": "2026-10-26", "cierre": "2026-10-26", "ifc": "2026-10-26", "inputs": "2026-10-26", "p30": "2026-10-26", "p60": "2026-10-26", "p90": "2026-10-26", "prep": "2026-10-26", "rev": "2026-10-26"}, "realm": {"2026-01": 0.5, "2026-02": 6.9, "2026-03": 57.4, "2026-04": 6, "2026-05": 5, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i-k26-ejecucion-casa-de-cambio-truck-1", "cb": null, "ejercicios": {"3+9": 225, "6+6": 226, "8+4": 226, "9+3": 226, "Ppto 2026": 689}, "etapas": {}, "f93": {"2026-01": 93, "2026-02": 23, "2026-03": 83, "2026-04": 27, "2026-06": -1}, "inicio": "", "kind": "con", "nombre": "Ejecución Casa de cambio truck shop", "oc": "", "orden": 1, "plan": {"2026-01": 99.9, "2026-02": 122.3, "2026-04": 76.8, "2026-05": 76.8, "2026-06": 85, "2026-07": 102.4, "2026-08": 126}, "ppto": 689.2, "proveedor": "", "proyectoId": "k26-ejecucion-casa-de-cambio-truck", "realm": {"2026-01": 93, "2026-02": 23, "2026-03": 83, "2026-04": 27, "2026-05": 0, "2026-06": -1, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "C. Barrera/R. Jarpa", "termino": ""}, {"id": "i-sulf-soporte", "cb": 466.5, "etapas": {}, "inicio": "", "kind": "ens", "nombre": "Soporte metalúrgico + QA/QC Sulfuros Primarios", "oc": "", "orden": 1, "ppto": 466.5, "proveedor": "", "proyectoId": "c27-sulfuros", "responsable": "", "termino": ""}, {"id": "i-k26-factibilidad-scp-fase-3-ch-1-1", "cb": null, "ejercicios": {"3+9": 471, "6+6": 955, "8+4": 663, "9+3": 663, "Ppto 2026": 665}, "etapas": {}, "f93": {"2026-01": 129, "2026-02": 202, "2026-03": 47, "2026-04": 63, "2026-10": 5, "2026-11": 95, "2026-12": 122}, "inicio": "", "kind": "ing", "nombre": "Factibilidad SCP Fase 3 (CH° 1°)", "oc": "", "orden": 1, "plan": {"2026-01": 220.8, "2026-02": 253.6, "2026-03": 159.4, "2026-04": 17.4, "2026-05": 13.3}, "ppto": 664.5, "proveedor": "", "proyectoId": "k26-factibilidad-scp-fase-3-ch-1", "realm": {"2026-01": 129, "2026-02": 202, "2026-03": 47, "2026-04": 63, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "A. Tapia", "termino": ""}, {"id": "i-k26-reparacion-canaletas-lixiviaci-1", "cb": null, "ejercicios": {"3+9": 5254, "6+6": 6023, "8+4": 4459, "9+3": 4809, "Ppto 2026": 4531}, "etapas": {}, "f93": {"2026-01": 359, "2026-02": 341, "2026-03": 217, "2026-04": 442, "2026-05": 537, "2026-06": 826, "2026-07": 604, "2026-08": 269, "2026-09": 477, "2026-10": 160, "2026-11": 357, "2026-12": 220}, "inicio": "", "kind": "con", "nombre": "Reparación canaletas lixiviación", "oc": "", "orden": 1, "plan": {"2026-01": 54.3, "2026-02": 46.8, "2026-03": 327.5, "2026-04": 474.4, "2026-05": 634, "2026-06": 915.3, "2026-07": 303.9, "2026-08": 355, "2026-09": 355, "2026-10": 355, "2026-11": 355, "2026-12": 355}, "ppto": 4531.2, "proveedor": "", "proyectoId": "k26-reparacion-canaletas-lixiviaci", "realm": {"2026-01": 359, "2026-02": 341, "2026-03": 217, "2026-04": 442, "2026-05": 537, "2026-06": 826, "2026-07": 604, "2026-08": 269, "2026-09": 477}, "responsable": "E. Pino", "termino": ""}, {"id": "i-k26-reparacion-piscina-de-pls-1", "cb": null, "ejercicios": {"3+9": 10, "6+6": 6, "8+4": -2, "9+3": -2}, "etapas": {}, "f93": {"2026-01": 13, "2026-02": 2, "2026-03": -6, "2026-04": 2, "2026-05": -5, "2026-06": -179, "2026-07": 170}, "inicio": "", "kind": "con", "nombre": "Reparación Piscina de PLS", "oc": "", "orden": 1, "plan": {}, "ppto": null, "proveedor": "", "proyectoId": "k26-reparacion-piscina-de-pls", "realm": {"2026-01": 13, "2026-02": 2, "2026-03": -6, "2026-04": 2, "2026-05": -5, "2026-06": -179, "2026-07": 170, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i-romlp-geotec", "cb": 357, "etapas": {}, "inicio": "", "kind": "ens", "nombre": "Ensayos geotécnicos ROM - Cuprochlor", "oc": "", "orden": 2, "ppto": 1007, "proveedor": "", "proyectoId": "c27-rom-lp", "responsable": "", "termino": ""}, {"id": "i-scp-muestreo", "cb": 95.9, "etapas": {}, "inicio": "", "kind": "ens", "nombre": "Muestreo Planta Chancado con Simulación", "oc": "", "orden": 2, "ppto": 0, "proveedor": "", "proyectoId": "c27-scp-f2", "responsable": "", "termino": ""}, {"id": "i26-canales-de-contorno-2", "actualizado": "2026-10-26T20:00:32.030Z", "cb": null, "ejercicios": {"3+9": 25, "6+6": 25, "8+4": 25, "9+3": 25}, "etapas": {"bases": "ok", "cierre": "run", "informe": "ok", "lab": "ok", "muestreo": "ok", "oc": "ok", "revision": "ok"}, "f93": {"2026-08": 22.1, "2026-09": 2.9}, "inicio": "", "kind": "ens", "nombre": "Ensayos Geotécnicos de Terreno Calicatas", "oc": "", "orden": 2, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": null, "proveedor": "", "proyectoId": "c26-canales-de-contorno", "proym": {"2026-10": 0, "2026-11": 0, "2026-12": 0}, "real": {"bases": "2026-10-26", "cierre": "", "informe": "2026-10-26", "lab": "2026-10-26", "muestreo": "2026-10-26", "oc": "2026-10-26", "revision": "2026-10-26"}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 22.1, "2026-09": 2.9}, "responsable": "", "termino": ""}, {"id": "i-sulf-perfil", "cb": 1178, "etapas": {}, "inicio": "", "kind": "ing", "nombre": "Perfil Sulfuros Primarios (Cachorro)", "oc": "", "orden": 2, "ppto": 1178, "proveedor": "", "proyectoId": "c27-sulfuros", "responsable": "", "termino": ""}, {"id": "i26-cuprochlor-t-brs-2", "actualizado": "2026-10-26T20:03:43.795Z", "cb": null, "ejercicios": {"3+9": 457.9, "6+6": 457.9, "8+4": 279.8, "9+3": 279.8, "C3 Reproceso": 157.9}, "etapas": {"bases": "ok", "informe": "run", "lab": "run", "muestreo": "ok", "oc": "ok"}, "f93": {"2026-01": 4, "2026-02": 5, "2026-03": 12.9, "2026-04": 0.4, "2026-05": 3, "2026-06": 27.2, "2026-07": 8, "2026-08": 33.5, "2026-09": 21.9, "2026-10": 30.9, "2026-11": 57.4, "2026-12": 75.6}, "inicio": "", "kind": "ens", "nombre": "Pruebas Metalúrgicas Cuprochlor (Lab Qco) - SGS", "oc": "", "orden": 2, "plan": {"2026-01": 5, "2026-02": 10, "2026-03": 5, "2026-04": 10, "2026-05": 15, "2026-06": 20, "2026-07": 20, "2026-08": 11.1, "2026-09": 7.9, "2026-10": 14.5, "2026-11": 15.8, "2026-12": 23.7}, "ppto": 158, "proveedor": "", "proyectoId": "c26-cuprochlor-t-brs", "proym": {"2026-10": 30.9, "2026-11": 57.4, "2026-12": 75.6}, "real": {"bases": "2026-10-26", "muestreo": "2026-10-26", "oc": "2026-10-26"}, "realm": {"2026-01": 4, "2026-02": 5, "2026-03": 12.9, "2026-04": 0.4, "2026-05": 3, "2026-06": 27.2, "2026-07": 8, "2026-08": 33.5, "2026-09": 21.9}, "responsable": "", "termino": ""}, {"id": "i26-sulfuros-primarios-2", "cb": null, "ejercicios": {"3+9": 0, "6+6": 0, "8+4": 0, "9+3": 0, "C3 Reproceso": 400}, "etapas": {}, "f93": {}, "inicio": "", "kind": "ens", "nombre": "Soporte Metalúrgico Cuprochlor (con y sin T°) Sulfuros Primarios", "oc": "", "orden": 2, "plan": {"2026-01": null, "2026-02": null, "2026-03": 20, "2026-04": 20, "2026-05": 60, "2026-06": 60, "2026-07": 40, "2026-08": 40, "2026-09": 40, "2026-10": 60, "2026-11": 50, "2026-12": 10}, "ppto": 400, "proveedor": "", "proyectoId": "c26-sulfuros-primarios", "proym": {"2026-10": 0, "2026-11": 0, "2026-12": 0}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i26-ripios-fase-2-2", "actualizado": "2026-10-26T19:58:08.547Z", "cb": null, "ejercicios": {"3+9": 120, "6+6": 170, "8+4": 218.4, "9+3": 218.4, "C3 Reproceso": 120}, "etapas": {"bd": "ok", "ifc": "ok", "inputs": "ok", "p30": "ok", "p60": "ok", "p90": "ok", "prep": "ok", "rev": "ok"}, "f93": {"2026-01": 43.5, "2026-02": 0.3, "2026-03": 8.5, "2026-04": 52.7, "2026-07": 65.5, "2026-08": 22.9, "2026-09": 25}, "inicio": "", "kind": "ing", "nombre": "PFS Ripios Fase 2", "oc": "", "orden": 2, "plan": {"2026-01": 30, "2026-02": 30, "2026-03": 40, "2026-04": 20, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": 120, "proveedor": "", "proyectoId": "c26-ripios-fase-2", "proym": {"2026-10": 0, "2026-11": 0, "2026-12": 0}, "real": {"bd": "2026-10-26", "ifc": "2026-10-26", "inputs": "2026-10-26", "p30": "2026-10-26", "p60": "2026-10-26", "p90": "2026-10-26", "prep": "2026-10-26", "rev": "2026-10-26"}, "realm": {"2026-01": 43.5, "2026-02": 0.3, "2026-03": 8.5, "2026-04": 52.7, "2026-05": 0, "2026-06": 0, "2026-07": 65.5, "2026-08": 22.9, "2026-09": 25}, "responsable": "", "termino": ""}, {"id": "i26-rom-estatico-lp-2", "cb": null, "ejercicios": {"3+9": 303.8, "6+6": 382.5, "8+4": 0, "9+3": 0, "C3 Reproceso": 303.8}, "etapas": {}, "f93": {}, "inicio": "", "kind": "ing", "nombre": "Estudio ROM Estático optimización + análisis nivel experto", "oc": "", "orden": 2, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": 76, "2026-08": 76, "2026-09": 30.4, "2026-10": 30.4, "2026-11": 60.8, "2026-12": 30.4}, "ppto": 304, "proveedor": "", "proyectoId": "c26-rom-estatico-lp", "proym": {"2026-10": 0, "2026-11": 0, "2026-12": 0}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i26-cuprochlor-t-brs-3", "actualizado": "2026-10-26T20:03:41.051Z", "cb": null, "ejercicios": {"3+9": 109, "6+6": 109, "8+4": 52.4, "9+3": 52.4, "C3 Reproceso": 109}, "etapas": {"bases": "ok", "informe": "run", "lab": "run", "muestreo": "ok", "oc": "ok"}, "f93": {"2026-08": 3.1, "2026-09": 4.3, "2026-10": 3.4, "2026-11": 6.8, "2026-12": 34.8}, "inicio": "", "kind": "ens", "nombre": "Supervisión de Pruebas y Escalamiento Cuprochlor (Servicio ITO)", "oc": "", "orden": 3, "plan": {"2026-01": null, "2026-02": 5, "2026-03": 8, "2026-04": 8, "2026-05": 8, "2026-06": 8, "2026-07": 8, "2026-08": 8, "2026-09": 8, "2026-10": 8, "2026-11": 30, "2026-12": 10}, "ppto": 109, "proveedor": "", "proyectoId": "c26-cuprochlor-t-brs", "proym": {"2026-10": 3.4, "2026-11": 6.8, "2026-12": 34.8}, "real": {"bases": "2026-10-26", "lab": "", "muestreo": "2026-10-26", "oc": "2026-10-26"}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 3.1, "2026-09": 4.3}, "responsable": "", "termino": ""}, {"id": "i-scp-granulo", "cb": 0, "etapas": {}, "inicio": "", "kind": "ens", "nombre": "Ensayos Granulométricos", "oc": "", "orden": 3, "ppto": 157, "proveedor": "", "proyectoId": "c27-scp-f2", "responsable": "", "termino": ""}, {"id": "i-romlp-metal", "cb": 299.6, "etapas": {}, "inicio": "", "kind": "ens", "nombre": "Ensayos metalúrgicos ROM", "oc": "", "orden": 3, "ppto": 299.6, "proveedor": "", "proyectoId": "c27-rom-lp", "responsable": "", "termino": ""}, {"id": "i26-ripios-fase-2-3", "actualizado": "2026-10-26T19:58:20.500Z", "cb": null, "ejercicios": {"3+9": 100, "6+6": 100, "8+4": 100, "9+3": 100, "C3 Reproceso": 50}, "etapas": {"bd": "ok", "inputs": "ok", "p30": "ok", "p60": "ok", "p90": "ok", "prep": "ok", "rev": "ok"}, "f93": {"2026-09": 50, "2026-10": 50}, "inicio": "", "kind": "ing", "nombre": "FQAR Ripios Fase 2", "oc": "", "orden": 3, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": 50, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": 50, "proveedor": "", "proyectoId": "c26-ripios-fase-2", "proym": {"2026-10": 50, "2026-11": 0, "2026-12": 0}, "real": {"bd": "2026-10-26", "inputs": "2026-10-26", "p30": "2026-10-26", "p60": "2026-10-26", "p90": "2026-10-26", "prep": "2026-10-26", "rev": "2026-10-26"}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 50}, "responsable": "", "termino": ""}, {"id": "i26-cuprochlor-t-brs-4", "actualizado": "2026-10-26T19:55:22.448Z", "cb": null, "ejercicios": {"3+9": 0, "6+6": 0, "8+4": 0, "9+3": 0, "C3 Reproceso": 153.2}, "etapas": {"bd": "pend", "inputs": "pend", "prep": "pend"}, "f93": {}, "inicio": "", "kind": "ing", "nombre": "PFS Cuprochlor (C/ Soporte Metalúrgico)", "oc": "", "orden": 4, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": null, "2026-06": null, "2026-07": null, "2026-08": null, "2026-09": null, "2026-10": null, "2026-11": 32.4, "2026-12": 120.8}, "ppto": 153.2, "proveedor": "", "proyectoId": "c26-cuprochlor-t-brs", "proym": {"2026-10": 0, "2026-11": 0, "2026-12": 0}, "real": {"bd": "", "inputs": "", "prep": ""}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}, {"id": "i26-cuprochlor-t-brs-5", "cb": null, "ejercicios": {"3+9": 150, "6+6": 0, "8+4": 0, "9+3": 0, "C3 Reproceso": 150}, "etapas": {}, "f93": {}, "inicio": "", "kind": "ing", "nombre": "Perfil Pila Demostrativa Cuprochlor - T", "oc": "", "orden": 5, "plan": {"2026-01": null, "2026-02": null, "2026-03": null, "2026-04": null, "2026-05": 20, "2026-06": 30, "2026-07": 40, "2026-08": 30, "2026-09": 30, "2026-10": null, "2026-11": null, "2026-12": null}, "ppto": 150, "proveedor": "", "proyectoId": "c26-cuprochlor-t-brs", "proym": {"2026-10": 0, "2026-11": 0, "2026-12": 0}, "realm": {"2026-01": 0, "2026-02": 0, "2026-03": 0, "2026-04": 0, "2026-05": 0, "2026-06": 0, "2026-07": 0, "2026-08": 0, "2026-09": 0}, "responsable": "", "termino": ""}], "costos": [{"id": "cos-canales-f2", "nombre": "Canales de Contorno Ripios Fase 2", "pep": "", "periodo": "2026-10", "proyectoId": "", "orden": 1, "lines": {"cont": {"flujo": {"CY28": 2832.4}, "base": 2832.4}}, "items": [{"id": "it01", "line": "ing", "parent": null, "group": false, "nombre": "Ingeniería de Terreno", "cant": null, "unidad": "", "ppto": 0, "meses": null, "c": {}, "flujo": {}, "orden": 1}, {"id": "g-canales", "line": "con", "parent": null, "group": true, "nombre": "Construcción Canales de Contorno", "cant": null, "unidad": "", "ppto": null, "meses": null, "c": {}, "flujo": {}, "orden": 2}, {"id": "it03", "line": "con", "parent": "g-canales", "group": false, "nombre": "Excavación Masivo – Suelo Común", "cant": 185563, "unidad": "m3", "ppto": 2256, "meses": 8, "c": {}, "flujo": {"2027-09": 282.0, "2027-10": 282.0, "2027-11": 282.0, "2027-12": 282.0, "CY28": 1128.0}, "orden": 3}, {"id": "it04", "line": "con", "parent": "g-canales", "group": false, "nombre": "Perforación y Tronadura", "cant": 44481, "unidad": "m3", "ppto": 946, "meses": 8, "c": {}, "flujo": {"2027-09": 118.25, "2027-10": 118.25, "2027-11": 118.25, "2027-12": 118.25, "CY28": 473.0}, "orden": 4}, {"id": "it05", "line": "con", "parent": "g-canales", "group": false, "nombre": "Excavación Masivo – Roca Sana", "cant": 44481, "unidad": "m3", "ppto": 793, "meses": 8, "c": {}, "flujo": {"2027-09": 99.125, "2027-10": 99.125, "2027-11": 99.125, "2027-12": 99.125, "CY28": 396.5}, "orden": 5}, {"id": "it06", "line": "con", "parent": "g-canales", "group": false, "nombre": "Relleno Masivo – Material de Excavación", "cant": 222787, "unidad": "m3", "ppto": 2635, "meses": 8, "c": {}, "flujo": {"2027-09": 329.375, "2027-10": 329.375, "2027-11": 329.375, "2027-12": 329.375, "CY28": 1317.5}, "orden": 6}, {"id": "it07", "line": "con", "parent": "g-canales", "group": false, "nombre": "Instalación Geomembrana", "cant": 208178, "unidad": "m2", "ppto": 2082, "meses": 8, "c": {}, "flujo": {"2027-09": 260.25, "2027-10": 260.25, "2027-11": 260.25, "2027-12": 260.25, "CY28": 1041.0}, "orden": 7}, {"id": "it08", "line": "con", "parent": "g-canales", "group": false, "nombre": "Instalación Geotextil", "cant": 41658, "unidad": "m2", "ppto": 426, "meses": 8, "c": {}, "flujo": {"2027-09": 53.25, "2027-10": 53.25, "2027-11": 53.25, "2027-12": 53.25, "CY28": 213.0}, "orden": 8}, {"id": "it09", "line": "con", "parent": "g-canales", "group": false, "nombre": "Instalación Geonet", "cant": 41636, "unidad": "m2", "ppto": 125, "meses": 8, "c": {}, "flujo": {"2027-09": 15.625, "2027-10": 15.625, "2027-11": 15.625, "2027-12": 15.625, "CY28": 62.5}, "orden": 9}, {"id": "it10", "line": "con", "parent": "g-canales", "group": false, "nombre": "Alcantarillado y Drenaje (Obra de Arte)", "cant": null, "unidad": "", "ppto": 656, "meses": 2, "c": {}, "flujo": {"2027-09": 328, "2027-10": 328}, "orden": 10}, {"id": "it11", "line": "con", "parent": "g-canales", "group": false, "nombre": "Contrato Liberación UXOS", "cant": null, "unidad": "", "ppto": 204, "meses": null, "c": {}, "flujo": {"2027-09": 204}, "orden": 11}, {"id": "it12", "line": "con", "parent": null, "group": false, "nombre": "Construcción Piscina de Recuperación 45.000 m3", "cant": null, "unidad": "", "ppto": 3000, "meses": null, "c": {}, "flujo": {"2027-05": 500, "2027-06": 1000, "2027-07": 1000, "2027-08": 500}, "orden": 12}, {"id": "it13", "line": "con", "parent": null, "group": false, "nombre": "Construcción Pozos de Monitoreo 10\" 50 metros", "cant": null, "unidad": "", "ppto": 500, "meses": null, "c": {}, "flujo": {"2027-05": 100, "2027-06": 200, "2027-07": 200}, "orden": 13}, {"id": "it14", "line": "con", "parent": null, "group": false, "nombre": "Servicio Inspección ITO", "cant": null, "unidad": "", "ppto": 840, "meses": null, "c": {}, "flujo": {"2027-05": 70, "2027-06": 70, "2027-07": 70, "2027-08": 70, "2027-09": 70, "2027-10": 70, "2027-11": 70, "2027-12": 70, "CY28": 280}, "orden": 14}, {"id": "it15", "line": "con", "parent": null, "group": false, "nombre": "Alojamiento y Alimentación", "cant": null, "unidad": "", "ppto": 400, "meses": null, "c": {}, "flujo": {"2027-05": 30, "2027-06": 30, "2027-07": 40, "2027-08": 40, "2027-09": 40, "2027-10": 40, "2027-11": 30, "2027-12": 30, "CY28": 120}, "orden": 15}, {"id": "g-permisos", "line": "con", "parent": null, "group": true, "nombre": "Permisos", "cant": null, "unidad": "", "ppto": null, "meses": null, "c": {}, "flujo": {}, "orden": 16}, {"id": "it17", "line": "con", "parent": "g-permisos", "group": false, "nombre": "Rescate Arqueológico", "cant": null, "unidad": "", "ppto": 1003, "meses": null, "c": {}, "flujo": {"2027-01": 180, "2027-02": 180, "2027-03": 180, "2027-04": 190, "2027-05": 180, "2027-07": 8.8, "CY28": 84.2}, "orden": 17}, {"id": "it18", "line": "adq", "parent": null, "group": false, "nombre": "Suministro Geomembrana y Geotextil Piscina", "cant": null, "unidad": "", "ppto": 200, "meses": null, "c": {}, "flujo": {"2027-05": 200}, "orden": 18}, {"id": "it19", "line": "adq", "parent": null, "group": false, "nombre": "Suministro Geomembrana y Geotextil Canales (1.154 por AED)", "cant": null, "unidad": "", "ppto": 1100, "meses": null, "c": {}, "flujo": {"2027-05": 500, "2027-06": 600}, "orden": 19}, {"id": "it20", "line": "own", "parent": null, "group": false, "nombre": "Owner ANT (10%)", "cant": null, "unidad": "", "ppto": 1716.6, "meses": null, "c": {}, "flujo": {"2027-09": 179.988, "2027-10": 159.588, "2027-11": 125.788, "2027-12": 125.788, "CY28": 511.57, "2027-05": 158.0, "2027-06": 190.0, "2027-07": 131.88, "2027-08": 61.0, "2027-01": 18.0, "2027-02": 18.0, "2027-03": 18.0, "2027-04": 19.0}, "orden": 20}]}]}</script>
 <div class="wrap">
   <div class="topbar">
     <div>
       <div class="kicker">GPRO Antucoya · Ingeniería</div>
-      <h1>Control de Entregables por Proyecto</h1>
+      <h1>Control de Avance de Proyectos</h1>
       <div class="accents"><span style="background:#00778B"></span><span style="background:#64CCC9"></span><span style="background:#4C8C2B"></span><span style="background:#EAAA00"></span><span style="background:#D22630"></span></div>
     </div>
+    <div class="seg zoomsel" role="group" aria-label="Zoom de la página"><button type="button" id="zOut" title="Alejar" aria-label="Alejar">−</button><button type="button" id="zVal" title="Volver a 100%">100%</button><button type="button" id="zIn" title="Acercar" aria-label="Acercar">+</button></div>
+    <div class="seg yrsel" role="group" aria-label="Cartera por año"><span class="yrlab">Cartera</span><button type="button" data-yr="2026" aria-pressed="false">2026</button><button type="button" data-yr="2027" aria-pressed="true">2027</button></div>
     <div class="sync" id="sync">Conectando…</div>
   </div>
 
@@ -419,6 +534,7 @@ body.has-syncbar .toast{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
     <button role="tab" id="tb-ent" data-tab="ent" aria-selected="true" aria-controls="tabEnt">Entregables</button>
     <button role="tab" id="tb-fin" data-tab="fin" aria-selected="false" aria-controls="tabFin">Flujos financieros</button>
     <button role="tab" id="tb-cos" data-tab="cos" aria-selected="false" aria-controls="tabCos">Control de costos</button>
+    <button role="tab" id="tb-cum" data-tab="cum" aria-selected="false" aria-controls="tabCum">Cumplimiento</button>
   </nav>
 
   <div class="tabpane" id="tabEnt" role="tabpanel" aria-labelledby="tb-ent">
@@ -430,6 +546,11 @@ body.has-syncbar .toast{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
       <button data-v="Capex" aria-pressed="false">CAPEX</button>
       <button data-v="C3" aria-pressed="false">C3</button>
       <button data-v="" aria-pressed="false">SIN TIPO</button>
+    </div>
+    <div class="seg" role="group" aria-label="Categoría" id="fCat">
+      <button data-v="all" aria-pressed="true">TODAS</button>
+      <button data-v="Ingeniería" aria-pressed="false">INGENIERÍA</button>
+      <button data-v="Construcción" aria-pressed="false">CONSTRUCCIÓN</button>
     </div>
     <select id="fFase" aria-label="Fase del estudio"></select>
     <input type="search" id="fQ" placeholder="Buscar proyecto o iniciativa" aria-label="Buscar proyecto o iniciativa">
@@ -459,22 +580,57 @@ body.has-syncbar .toast{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
   <div class="card adj" id="adjCard" hidden>
     <h2>Ajustes de cartera</h2>
     <p class="adjnote">Restas de presupuesto que no son proyectos de la matriz, pero se suman al total para cuadrar con el Caso Base.</p>
-    <table class="adjt"><thead><tr><th>Ítem</th><th>Tipo</th><th class="num">PPTO 2027 (kUS$)</th></tr></thead><tbody id="adjBody"></tbody></table>
+    <table class="adjt"><thead><tr><th>Ítem</th><th>Tipo</th><th class="num">PPTO <span class="yrT">2027</span> (kUS$)</th></tr></thead><tbody id="adjBody"></tbody></table>
   </div>
 
   <div class="foot" id="legend"></div>
   </div>
 
   <div class="tabpane" id="tabFin" role="tabpanel" aria-labelledby="tb-fin" hidden>
+    <div class="toolbar"><div class="seg" role="group" aria-label="Tipo de iniciativa" id="fTipoF">
+      <button data-v="all" aria-pressed="true">TODOS</button>
+      <button data-v="Capex" aria-pressed="false">CAPEX</button>
+      <button data-v="C3" aria-pressed="false">C3</button>
+      <button data-v="" aria-pressed="false">SIN TIPO</button>
+    </div><div class="seg" role="group" aria-label="Categoría" id="fCatF">
+      <button data-v="all" aria-pressed="true">TODAS</button>
+      <button data-v="Ingeniería" aria-pressed="false">INGENIERÍA</button>
+      <button data-v="Construcción" aria-pressed="false">CONSTRUCCIÓN</button>
+    </div><span class="fsub">Filtra la curva y el plan mensual</span><div class="spacer"></div><span class="cl">Mes</span><div class="seg" role="group" aria-label="Mes de los indicadores" id="finMes"></div></div>
     <section class="chips" id="finKpi" aria-label="Resumen flujos"></section>
     <div class="card">
-      <div class="fhead"><h2>Curva S · plan acumulado</h2><span class="fsub" id="curveSub"></span></div>
+      <div class="fhead"><h2>Curva S · plan, 9+3 y real</h2><span class="fsub" id="curveSub"></span></div>
       <div id="curve" class="curve"></div>
+      <div class="cpistrip" id="cpiStrip" role="group" aria-label="CPI por mes"></div>
     </div>
     <div class="card">
-      <div class="fhead"><h2>Plan mensual por iniciativa</h2><span class="fsub">kUS$ · oct-2026 a dic-2027 · escribe en cualquier celda para corregir</span><span class="spacer"></span><button class="btn-ghost sm" id="xlsBtn2" type="button">⤓ Excel</button></div>
+      <div class="fhead"><h2>CPI · valor ganado por proyecto</h2><span class="fsub" id="evmSub"></span></div>
+      <div class="scroll" id="evmBox"></div>
+      <p class="adjnote" style="margin:8px 0 0">CPI = EV ÷ AC (≥1 en verde: avanza lo que gasta) · SPI = EV ÷ PV · Desv. vs plan = real − plan a la fecha · CV = EV − AC · EAC = PPTO ÷ CPI. El avance físico es el % que escribas para cada proyecto; si lo dejas vacío se usa el avance por etapas de Entregables.</p>
+    </div>
+    <div class="card">
+      <div class="fhead"><h2>Flujo mensual por iniciativa</h2><div class="seg" role="group" aria-label="Serie" id="finSer"></div><span class="fsub" id="finHint"></span><span class="spacer"></span><button class="btn-ghost sm" id="finReopen" type="button" hidden></button><button class="btn-add sm" id="finClose" type="button" hidden></button><button class="btn-ghost sm" id="xlsBtn2" type="button">⤓ Excel</button></div>
       <div class="scroll"><table class="fint" id="finTable" lang="es"></table></div>
       <p class="adjnote" style="margin:10px 0 0">Los proyectos con iniciativas se planifican por iniciativa; los demás, como una sola partida. Los ajustes de cartera (restas) no tienen flujo y no entran en esta hoja.</p>
+    </div>
+  </div>
+
+  <div class="tabpane" id="tabCum" role="tabpanel" aria-labelledby="tb-cum" hidden>
+    <div class="toolbar"><div class="seg" role="group" aria-label="Tipo de iniciativa" id="fTipoC">
+      <button data-v="all" aria-pressed="true">TODOS</button>
+      <button data-v="Capex" aria-pressed="false">CAPEX</button>
+      <button data-v="C3" aria-pressed="false">C3</button>
+      <button data-v="" aria-pressed="false">SIN TIPO</button>
+    </div><div class="seg" role="group" aria-label="Categoría" id="fCatC">
+      <button data-v="all" aria-pressed="true">TODAS</button>
+      <button data-v="Ingeniería" aria-pressed="false">INGENIERÍA</button>
+      <button data-v="Construcción" aria-pressed="false">CONSTRUCCIÓN</button>
+    </div><div class="spacer"></div><span class="fsub" id="cumLast"></span><button class="btn-add" id="cutBtn" type="button">Cerrar semana</button></div>
+    <section class="chips" id="cumKpi" aria-label="Resumen cumplimiento"></section>
+    <div class="card">
+      <div class="fhead"><h2>Cumplimiento por proyecto</h2><span class="fsub">vs línea base vigente · las columnas de fecha muestran el SPI de los últimos cortes · toca un proyecto para ver su línea base</span></div>
+      <div class="scroll"><table class="cumt" id="cumTable" lang="es"></table></div>
+      <div class="empty" id="cumEmpty" hidden><strong>No hay proyectos con este filtro</strong></div>
     </div>
   </div>
 
@@ -489,9 +645,9 @@ body.has-syncbar .toast{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
     </div>
     <section class="chips" id="cosKpi" aria-label="Resumen de costos"></section>
     <div class="card">
-      <div class="fhead"><h2>Estado de costos · 9 columnas + flujo mensual</h2><span class="fsub">kUS$ · formato PCS-PR-015 · ▸ despliega ítems · “▸ CY27” abre los meses</span><span class="spacer"></span><button class="btn-ghost sm" id="cosExp" type="button">Expandir todo</button><button class="btn-ghost sm" id="cosAddIt" type="button">＋ Ítem</button></div>
+      <div class="fhead"><h2>Estado de costos · 9 columnas + flujo mensual</h2><span class="fsub">kUS$ · formato PCS-PR-015 · ▸ despliega ítems · “▸ <span class="cyT">CY27</span>” abre los meses</span><span class="spacer"></span><button class="btn-ghost sm" id="cosExp" type="button">Expandir todo</button><button class="btn-ghost sm" id="cosAddIt" type="button">＋ Ítem</button></div>
       <div class="scroll"><table class="cost" id="cosTable" lang="es"></table></div>
-      <p class="adjnote" style="margin:10px 0 0">Presupuesto aprobado = base + cambios de alcance y transferencias. Variación = EAC − aprobado (positivo = sobrecosto; EAC vacío = aprobado). Calce = aprobado − total del flujo (CY26 + meses 2027 + CY28): ✓ cuando el flujo cubre el presupuesto.</p>
+      <p class="adjnote" style="margin:10px 0 0">Presupuesto aprobado = base + cambios de alcance y transferencias. Variación = EAC − aprobado (positivo = sobrecosto; EAC vacío = aprobado). Calce = aprobado − total del flujo (<span id="calceTxt">CY26 + meses 2027 + CY28</span>): ✓ cuando el flujo cubre el presupuesto.</p>
     </div>
     <div class="empty" id="cosEmpty" hidden><strong>Aún no hay reportes de costos</strong><span>Crea el primero con “＋ Nuevo reporte”.</span></div>
   </div>
@@ -504,15 +660,28 @@ body.has-syncbar .toast{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
       <div class="fld full"><label for="fmNombre">Nombre proyecto (corto)</label><input id="fmNombre" type="text" placeholder="Nombre corto, ej. PTAS" required></div>
       <div class="fld"><label for="fmFase">Fase de ingeniería</label><select id="fmFase"></select></div>
       <div class="fld"><label for="fmPep">PEP</label><input id="fmPep" type="text" placeholder="Ej. 1003-25PE413"></div>
-      <div class="fld"><label for="fmMonto">PPTO 2027 (kUS$)</label><input id="fmMonto" type="number" step="0.1" min="0" inputmode="decimal" placeholder="0,0"><span class="fhint" id="fmMontoHint" hidden>Las iniciativas se comparan contra este monto; la diferencia aparece como “sin asignar”.</span></div>
+      <div class="fld"><label for="fmMonto">PPTO <span class="yrT">2027</span> (kUS$)</label><input id="fmMonto" type="number" step="0.1" min="0" inputmode="decimal" placeholder="0,0"><span class="fhint" id="fmMontoHint" hidden>Las iniciativas se comparan contra este monto; la diferencia aparece como “sin asignar”.</span></div>
       <div class="fld"><span class="flab">Tipo de iniciativa</span>
         <div class="tipo big" role="radiogroup" aria-label="Tipo de iniciativa" id="fmTipo">
           <button type="button" class="capex" data-v="Capex" role="radio" aria-checked="false">Capex</button>
           <button type="button" class="c3" data-v="C3" role="radio" aria-checked="false">C3</button>
         </div></div>
+      <div class="fld"><span class="flab">Categoría</span>
+        <div class="tipo big" role="radiogroup" aria-label="Categoría" id="fmCat">
+          <button type="button" class="cing" data-v="Ingeniería" role="radio" aria-checked="false">Ingeniería</button>
+          <button type="button" class="ccon" data-v="Construcción" role="radio" aria-checked="false">Construcción</button>
+        </div></div>
       <div class="fld"><label for="fmJi">Jefe de Ingeniería</label><input id="fmJi" type="text" list="respList" placeholder="Nombre"></div>
       <div class="fld"><label for="fmJe">Jefe Ejecutor</label><input id="fmJe" type="text" list="respList" placeholder="Nombre o TBD"><datalist id="respList"></datalist></div>
       <div class="fld full"><label for="fmDesc">Descripción</label><input id="fmDesc" type="text" placeholder="Ej. PFS Mejoramiento PTAS 3400"></div>
+      <div class="fld full" id="fmKindFld"><span class="flab">Primera iniciativa · tipo de seguimiento</span>
+        <div class="tipo big kindsel" role="radiogroup" aria-label="Tipo de seguimiento de la primera iniciativa" id="fmKind">
+          <button type="button" class="ing" data-v="ing" role="radio" aria-checked="false">Servicio de ingeniería</button>
+            <button type="button" class="ens" data-v="ens" role="radio" aria-checked="false">Ensayo</button>
+            <button type="button" class="med" data-v="med" role="radio" aria-checked="false">Medición</button>
+          <button type="button" class="con" data-v="con" role="radio" aria-checked="false">Construcción</button>
+          <button type="button" class="per" data-v="per" role="radio" aria-checked="false">Permiso</button>
+        </div><span class="fhint">Se crea con el nombre de la descripción (o del proyecto) y el PPTO del proyecto. Luego puedes agregar más.</span></div>
     </div>
     <p class="ferr" id="fmErr" hidden>Escribe el nombre del proyecto para poder guardarlo.</p>
     <div class="factions">
@@ -533,10 +702,12 @@ body.has-syncbar .toast{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
           <button type="button" class="ing" data-v="ing" role="radio" aria-checked="false">Servicio de ingeniería</button>
           <button type="button" class="ens" data-v="ens" role="radio" aria-checked="false">Ensayo</button>
           <button type="button" class="med" data-v="med" role="radio" aria-checked="false">Medición</button>
+          <button type="button" class="con" data-v="con" role="radio" aria-checked="false">Construcción</button>
+          <button type="button" class="per" data-v="per" role="radio" aria-checked="false">Permiso</button>
         </div></div>
       <div class="kstages" id="ifStages"></div>
-      <div class="fld"><label for="ifPpto">PPTO 2027 (kUS$)</label><input id="ifPpto" type="number" step="0.1" inputmode="decimal" placeholder="0,0"></div>
-      <div class="fld"><label for="ifCb">CB 2027 (kUS$)</label><input id="ifCb" type="number" step="0.1" inputmode="decimal" placeholder="0,0"></div>
+      <div class="fld"><label for="ifPpto">PPTO <span class="yrT">2027</span> (kUS$)</label><input id="ifPpto" type="number" step="0.1" inputmode="decimal" placeholder="0,0"></div>
+      <div class="fld"><label for="ifCb">CB <span class="yrT">2027</span> (kUS$)</label><input id="ifCb" type="number" step="0.1" inputmode="decimal" placeholder="0,0"></div>
       <div class="fld"><label for="ifProv">Empresa / proveedor</label><input id="ifProv" type="text" list="provList" placeholder="Ej. laboratorio o consultora"><datalist id="provList"></datalist></div>
       <div class="fld"><label for="ifOc">N° OC / contrato</label><input id="ifOc" type="text" placeholder="Ej. 4500012345"></div>
       <div class="fld full"><label for="ifResp">Responsable</label><input id="ifResp" type="text" list="respList" placeholder="Nombre"></div>
@@ -580,11 +751,29 @@ body.has-syncbar .toast{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
       <div class="fld itx"><label for="itUnid">Unidad</label><input id="itUnid" type="text" placeholder="m3, m2, gl…"></div>
       <div class="fld itx"><label for="itPpto">Ppto aprobado (kUS$)</label><input id="itPpto" type="number" step="0.1" placeholder="0,0"></div>
       <div class="fld itx"><label for="itMeses">Meses</label><input id="itMeses" type="number" min="1" step="1" placeholder="Ej. 8"></div>
-      <div class="fld full itx"><label for="itIni">Distribuir el ppto en partes iguales desde</label><select id="itIni"></select><span class="fhint">Reparte el ppto entre los meses indicados. Lo que pase de dic-27 se suma a CY28. Puedes corregir cada mes después.</span></div>
+      <div class="fld full itx"><label for="itIni">Distribuir el ppto en partes iguales desde</label><select id="itIni"></select><span class="fhint">Reparte el ppto entre los meses indicados. Lo que pase de <span class="decT">dic-27</span> se suma a <span class="cynT">CY28</span>. Puedes corregir cada mes después.</span></div>
     </div>
     <p class="ferr" id="itErr" hidden>Escribe la descripción del ítem.</p>
     <div class="factions"><button type="button" class="btn-ghost" id="itCancel">Cancelar</button><button type="submit" class="btn-add" id="itOk">Agregar</button></div>
   </form>
+</div>
+
+<div class="modal-bg" id="lbModal" hidden>
+  <div class="modal lbm" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
+    <h3 id="lbTitle">Línea base</h3>
+    <div id="lbHead"></div>
+    <div class="lbscroll"><table class="lbt" id="lbTable" lang="es"></table></div>
+    <div id="lbHist"></div>
+    <div class="factions"><button type="button" class="btn-ghost" id="lbClose">Cerrar</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="cutModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cutTitle">
+    <h3 id="cutTitle">Cerrar semana</h3>
+    <div class="fgrid"><div class="fld full"><label for="cutDate">Fecha de corte</label><input id="cutDate" type="date"></div></div>
+    <p class="adjnote" id="cutInfo" style="margin:10px 0 0"></p>
+    <div class="factions"><button type="button" class="btn-ghost" id="cutCancel">Cancelar</button><button type="button" class="btn-add" id="cutOk">Guardar corte</button></div>
+  </div>
 </div>
 
 <script>
@@ -607,7 +796,13 @@ const KINDS={
     {k:"lab",t:"Laboratorio"},{k:"informe",t:"Informe"},{k:"revision",t:"Revisión"},{k:"cierre",t:"Cierre"}]},
   med:{t:"Medición",s:"Med.",stages:[
     {k:"plan",t:"Plan"},{k:"oc",t:"Contratación / OC"},{k:"campana",t:"Campaña en terreno"},
-    {k:"proc",t:"Procesamiento"},{k:"informe",t:"Informe"},{k:"cierre",t:"Cierre"}]}
+    {k:"proc",t:"Procesamiento"},{k:"informe",t:"Informe"},{k:"cierre",t:"Cierre"}]},
+  con:{t:"Construcción",s:"Con.",stages:[
+    {k:"oc",t:"Contratación / OC"},{k:"movil",t:"Movilización"},{k:"obras",t:"Obras civiles"},{k:"montaje",t:"Montaje"},
+    {k:"pem",t:"Pruebas y PEM"},{k:"entrega",t:"Entrega"},{k:"cierre",t:"Cierre"}]},
+  per:{t:"Permiso",s:"Per.",stages:[
+    {k:"ante",t:"Antecedentes / línea base"},{k:"exp",t:"Preparación expediente"},{k:"ingreso",t:"Ingreso a autoridad"},
+    {k:"rev",t:"Revisión autoridad"},{k:"obs",t:"Respuesta a observaciones"},{k:"res",t:"Resolución"},{k:"cierre",t:"Cierre"}]}
 };
 const FASES=["Perfil","PFS","FS","DET","EJE"];
 const ICON={
@@ -625,13 +820,24 @@ const STATES=[
 const STATE_TXT={pend:"Pendiente",run:"En curso",pin:"Siguiente / foco",ok:"Completado"};
 const W={pend:0,run:.5,pin:0,ok:1};
 
-let projects=[], inis=[], ajustes=[], costos=[];
+/* datos: DB guarda todas las carteras; projects/inis/ajustes/costos muestran solo el año elegido */
+const DB={proyectos:[],iniciativas:[],ajustes:[],costos:[]};
+const ANIOS=[2026,2027];
+let YR=2027;try{const y=+localStorage.getItem("gpro-anio");if(ANIOS.includes(y))YR=y;}catch(e){}
+const yrOf=o=>+((o&&o.anio)||2027);
+const pIds=()=>new Set(DB.proyectos.filter(p=>yrOf(p)===YR).map(p=>p.id));
+const VIS={proyectos:p=>yrOf(p)===YR,iniciativas:(i,ids)=>ids.has(i.proyectoId),ajustes:a=>yrOf(a)===YR,
+  costos:(c,ids)=>c.proyectoId&&DB.proyectos.some(p=>p.id===c.proyectoId)?ids.has(c.proyectoId):yrOf(c)===YR};
+const visOf=c=>{const ids=pIds();return DB[c].filter(x=>VIS[c](x,ids));};
+const setVis=(c,v)=>{const ids=pIds();DB[c]=[...DB[c].filter(x=>!VIS[c](x,ids)),...v];};
+[["projects","proyectos"],["inis","iniciativas"],["ajustes","ajustes"],["costos","costos"]].forEach(([n,c])=>
+  Object.defineProperty(globalThis,n,{get:()=>visOf(c),set:v=>setVis(c,v),configurable:true}));
 /* almacenamiento: lo define el arranque (base de datos del artifact o navegador local) */
 let store={newId:()=> "l"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),add(){},upd(){},del(){}};
 
-const ui={tipo:"all",fase:"all",q:"",hide:false,confirm:null,open:new Set()};
-try{const s=JSON.parse(localStorage.getItem("gpro-filtros")||"{}");ui.tipo=s.tipo??"all";ui.fase=s.fase??"all";ui.hide=!!s.hide;(s.open||[]).forEach(x=>ui.open.add(x));}catch(e){}
-const saveUi=()=>{try{localStorage.setItem("gpro-filtros",JSON.stringify({tipo:ui.tipo,fase:ui.fase,hide:ui.hide,open:[...ui.open]}))}catch(e){}};
+const ui={tipo:"all",cat:"all",fase:"all",q:"",hide:false,confirm:null,open:new Set()};
+try{const s=JSON.parse(localStorage.getItem("gpro-filtros")||"{}");ui.tipo=s.tipo??"all";ui.cat=s.cat??"all";ui.fase=s.fase??"all";ui.hide=!!s.hide;(s.open||[]).forEach(x=>ui.open.add(x));}catch(e){}
+const saveUi=()=>{try{localStorage.setItem("gpro-filtros",JSON.stringify({tipo:ui.tipo,cat:ui.cat,fase:ui.fase,hide:ui.hide,open:[...ui.open]}))}catch(e){}};
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -673,17 +879,25 @@ function renderHead(){
     '<th class="c-gate">Hitos ADS</th><th class="c-av">Avance</th><th class="c-del"></th>';
   $("#fFase").innerHTML='<option value="all">Todas las fases</option>'+FASES.map(f=>`<option value="${f}">${f}</option>`).join("")+'<option value="">Por definir</option>';
   $("#fFase").value=ui.fase;
-  document.querySelectorAll("#fTipo button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===ui.tipo)));
+  syncFilt();
   $("#fHide").checked=ui.hide;
   $("#legend").innerHTML=STATES.map(s=>`<span class="lg"><span class="st ${s.cls}" style="width:auto;height:auto;cursor:default">${ICON[s.k]}</span>${s.t}</span>`).join("")+
     Object.entries(KINDS).map(([k,v])=>`<span class="lg"><span class="kind ${k}">${v.s}</span>${v.t}</span>`).join("")+
-    '<span style="margin-left:auto">Toca una celda para cambiar su estado · Monto = PPTO 2027 en kUS$ (con iniciativas, es su suma) · Fuente: Cartera de Inversiones Caso Base 2026.</span>';
+    '<span style="margin-left:auto">Toca una celda para cambiar su estado · Monto = PPTO '+YR+' en kUS$ (sin monto, se usa la suma de sus iniciativas) · Fuente: '+(YR===2026?'C3 Presupuesto 2026 · ejercicio 9+3':'Cartera de Inversiones Caso Base 2026')+'.</span>';
 }
 
+/* categoría del proyecto: Ingeniería / Construcción (los C3 son estudios: Ingeniería por defecto) */
+const CATS=["Ingeniería","Construcción"];
+const catOf=p=>p.categoria||(p.tipo==="C3"?"Ingeniería":"");
+const fOk=p=>(ui.tipo==="all"||(p.tipo||"")===ui.tipo)&&(ui.cat==="all"||catOf(p)===ui.cat);
+function syncFilt(){
+  document.querySelectorAll("#fTipo button,#fTipoF button,#fTipoC button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===ui.tipo)));
+  document.querySelectorAll("#fCat button,#fCatF button,#fCatC button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===ui.cat)));
+}
 const qmatch=s=>(s||"").toLowerCase().includes(ui.q.toLowerCase());
 function visible(){
   return projects.filter(p=>{
-    if(ui.tipo!=="all"&&(p.tipo||"")!==ui.tipo)return false;
+    if(!fOk(p))return false;
     if(ui.fase!=="all"&&(p.fase||"")!==ui.fase)return false;
     if(ui.q&&!qmatch(p.nombre)&&!qmatch(p.desc)&&!kidsOf(p).some(i=>qmatch(i.nombre)||qmatch(i.proveedor)))return false;
     if(ui.hide&&progress(p).falta===0)return false;
@@ -692,21 +906,25 @@ function visible(){
 }
 
 function renderSummary(){
-  const by=t=>projects.filter(p=>(p.tipo||"")===t);
+  /* las tarjetas siguen el filtro de categoría (Ingeniería / Construcción) */
+  const all=projects.filter(p=>ui.cat==="all"||catOf(p)===ui.cat);
+  const adjSum=t=>ui.cat==="Construcción"?0:ajustes.filter(a=>t==null||(a.tipo||"")===t).reduce((s,a)=>s+num(a.monto),0);
+  const nIni=all.reduce((s,p)=>s+kidsOf(p).length,0),catTxt=ui.cat==="all"?"":` · ${ui.cat.toLowerCase()}`;
+  const by=t=>all.filter(p=>(p.tipo||"")===t);
   const sum=a=>a.reduce((s,p)=>s+pMonto(p),0);
   const avg=a=>a.length?a.reduce((s,p)=>s+progress(p).pct,0)/a.length:0;
   const cap=by("Capex"),c3=by("C3");
-  const prs=projects.map(progress);
+  const prs=all.map(progress);
   const falta=prs.reduce((s,x)=>s+x.falta,0),total=prs.reduce((s,x)=>s+x.total,0),foco=prs.reduce((s,x)=>s+x.pins,0);
   const adjTxt=t=>{const v=adjSum(t);return v?` · ajustes ${fmt(v)}`:"";};
   $("#summary").innerHTML=`
-    <div class="chip total"><div class="lab">Cartera</div>
-      <div class="num">${fmt(sum(projects)+adjSum(null))}<small>kUS$</small></div>
-      <div class="sub">${projects.length} proyectos · ${inis.length} iniciativas${adjTxt(null)}</div></div>
-    <div class="chip"><div class="lab">Capex</div>
+    <div class="chip total"><div class="lab">Cartera ${YR}${catTxt}</div>
+      <div class="num">${fmt(sum(all)+adjSum(null))}<small>kUS$</small></div>
+      <div class="sub">${all.length} proyectos · ${nIni} iniciativas${adjTxt(null)}</div></div>
+    <div class="chip"><div class="lab">Capex${catTxt}</div>
       <div class="num n-capex">${fmt(sum(cap)+adjSum("Capex"))}<small>kUS$</small></div>
       <div class="sub">${cap.length} proyecto${cap.length===1?"":"s"}${adjTxt("Capex")} · avance ${Math.round(avg(cap)*100)}%</div></div>
-    <div class="chip"><div class="lab">C3</div>
+    <div class="chip"><div class="lab">C3${catTxt}</div>
       <div class="num n-c3">${fmt(sum(c3)+adjSum("C3"))}<small>kUS$</small></div>
       <div class="sub">${c3.length} proyecto${c3.length===1?"":"s"}${adjTxt("C3")} · avance ${Math.round(avg(c3)*100)}%</div></div>
     <div class="chip"><div class="lab">Entregables faltantes</div>
@@ -717,9 +935,11 @@ function renderSummary(){
       <div class="sub">${by("").length} proyecto${by("").length===1?"":"s"} sin tipo asignado</div></div>`;
 }
 
-function stepper(stages,etapas,attr){const e=etapas||{};
-  return `<div class="stepper">${stages.map(s=>{const v=e[s.k]||"pend";
-    return `<div class="step ${v==="ok"?"done":""} ${v==="pin"?"cur":""}">${stBtn(v,s.t,`${attr}="${s.k}"`)}<span class="sl" title="${esc(s.t)}">${esc(s.sl||s.t)}</span></div>`}).join("")}</div>`;}
+function stepper(stages,etapas,attr,ini){const e=etapas||{},lb=(ini&&ini.lb)||{},fc=(ini&&ini.fc)||{},re=(ini&&ini.real)||{},d=ini?hoy():"";
+  return `<div class="stepper">${stages.map(s=>{const v=e[s.k]||"pend",L=lb[s.k],F=fc[s.k],R=re[s.k];
+    const late=v!=="ok"&&L&&((F&&F>L)||(!F&&L<d)),dt=v==="ok"&&R?`<span class="sd ok" title="Real ${fdate(R)}${L?" · LB "+fdate(L):""}">✓ ${dm(R)}</span>`
+      :(F||L)?`<span class="sd ${late?"late":""}" title="LB ${fdate(L)||"—"} · Forecast ${fdate(F)||"—"}">${F&&F!==L?"FC ":""}${dm(F||L)}</span>`:"";
+    return `<div class="step ${v==="ok"?"done":""} ${v==="pin"?"cur":""}">${stBtn(v,s.t,`${attr}="${s.k}"`)}<span class="sl" title="${esc(s.t)}">${esc(s.sl||s.t)}</span>${dt}</div>`}).join("")}</div>`;}
 const stBtn=(v,label,attrs)=>{const S=STATES.find(x=>x.k===v);return `<button class="st ${S.cls}" ${attrs} title="${esc(label)}: ${S.t}" aria-label="${esc(label)}: ${S.t}">${ICON[v]}</button>`;};
 function progCell(pr){
   const okW=pr.total?pr.ok/pr.total*100:0,runW=pr.total?pr.run/pr.total*50:0;
@@ -737,7 +957,7 @@ function projectRow(p,idx){
   const k=kidsOf(p),pr=progress(p),open=ui.open.has(p.id)||(ui.q&&k.some(i=>qmatch(i.nombre)||qmatch(i.proveedor))),e=p.etapas||{};
   const confirm=ui.confirm===p.id;
   const ks=kidsSum(p),diff=+(pMonto(p)-ks).toFixed(1);
-  const montoCell=`<div class="monto"><input type="number" id="m-${p.id}" inputmode="decimal" step="0.1" min="0" placeholder="${k.length?fmt(ks):"—"}" value="${p.monto??""}" data-f="monto" aria-label="PPTO 2027 en kUS$"><small>kUS$</small></div>`+
+  const montoCell=`<div class="monto"><input type="number" id="m-${p.id}" inputmode="decimal" step="0.1" min="0" placeholder="${k.length?fmt(ks):"—"}" value="${p.monto??""}" data-f="monto" aria-label="PPTO ${YR} en kUS$"><small>kUS$</small></div>`+
     (k.length?`<div class="msum">${pCB(p)!=null?`<span>CB ${fmt(pCB(p))}</span>`:""}${diff?`<span class="${diff>0?"unas":"over"}" title="Iniciativas suman ${fmt(ks)}">${diff>0?"Sin asignar":"Excede"} ${fmt(Math.abs(diff))}</span>`:`<span class="asg" title="Las iniciativas suman el PPTO del proyecto">✓ asignado</span>`}</div>`:"");
   const stagesCell=k.length
     ?`<td class="ksumc"><div class="ksum" data-act="toggle" title="${open?"Ocultar":"Ver"} el detalle de las iniciativas">${k.map(i=>{const ip=iniProg(i),pc=Math.round(ip.pct*100);
@@ -755,10 +975,10 @@ function projectRow(p,idx){
     <td><div class="tm"><div class="tipo" role="group" aria-label="Tipo de iniciativa">
       <button class="capex ${p.tipo==="Capex"?"on":""}" data-tipo="Capex" aria-pressed="${p.tipo==="Capex"}">Capex</button>
       <button class="c3 ${p.tipo==="C3"?"on":""}" data-tipo="C3" aria-pressed="${p.tipo==="C3"}">C3</button>
-    </div>${montoCell}</div></td>
+    </div><div class="tipo cat" role="group" aria-label="Categoría">${CATS.map(c=>`<button class="${c==="Ingeniería"?"cing":"ccon"} ${catOf(p)===c?"on":""}" data-cat="${c}" aria-pressed="${catOf(p)===c}" title="${c}">${c==="Ingeniería"?"Ing.":"Constr."}</button>`).join("")}</div>${montoCell}</div></td>
     ${stagesCell}
     <td class="gate">${gateCell(p)}</td>
-    <td>${progCell(pr)}</td>
+    <td>${progCell(pr)}${lbBadge(p)}</td>
     <td>${confirm?`<div class="confirm"><button class="yes" data-act="del-yes">Eliminar${k.length?` (+${k.length})`:""}</button><button data-act="del-no">Cancelar</button></div>`
       :`<div class="acts"><button class="edit" data-act="add-ini" aria-label="Agregar iniciativa" title="Agregar iniciativa">＋</button><button class="edit" data-act="edit" aria-label="Editar proyecto" title="Editar">✎</button><button class="del" data-act="del" aria-label="Eliminar proyecto" title="Eliminar">×</button></div>`}</td>
   </tr>`;
@@ -769,11 +989,11 @@ function iniRow(i,last){
   const K=KINDS[i.kind]||KINDS.ing,pr=iniProg(i),e=i.etapas||{},confirm=ui.confirm===i.id;
   const meta=[i.proveedor&&`<span>Empresa <b>${esc(i.proveedor)}</b></span>`,i.oc&&`<span>OC <b>${esc(i.oc)}</b></span>`,i.responsable&&`<span>Resp. <b>${esc(i.responsable)}</b></span>`,
     (i.inicio||i.termino)&&`<span>${fdate(i.inicio)||"…"} → ${fdate(i.termino)||"…"}</span>`].filter(Boolean).join("");
-  const stagesCell=`<td class="stepc">${stepper(K.stages,e,"data-istage")}</td>`;
+  const stagesCell=`<td class="stepc">${stepper(K.stages,e,"data-istage",i)}</td>`;
   return `<tr class="irow${last?" last":""}" data-ini="${i.id}">
-    <td class="first"><div class="iname"><div class="ih"><span class="kind ${i.kind}" title="${esc(K.t)}">${K.s}</span><b>${esc(i.nombre)}</b></div>
+    <td class="first"><div class="iname"><div class="ih"><span class="kind ${i.kind}" title="${esc(K.t)}">${K.s}</span><textarea class="iname-in" rows="${Math.min(3,Math.ceil((i.nombre||"").length/26)||1)}" data-in="nombre" aria-label="Nombre de la iniciativa" title="Toca para cambiar el nombre">${esc(i.nombre)}</textarea></div>
       ${meta?`<div class="imeta">${meta}</div>`:""}</div></td>
-    <td><div class="tm"><div class="monto"><input type="number" inputmode="decimal" step="0.1" placeholder="—" value="${i.ppto??""}" data-if="ppto" aria-label="PPTO 2027 de ${esc(i.nombre)} en kUS$"><small>kUS$</small></div>
+    <td><div class="tm"><div class="monto"><input type="number" inputmode="decimal" step="0.1" placeholder="—" value="${i.ppto??""}" data-if="ppto" aria-label="PPTO ${YR} de ${esc(i.nombre)} en kUS$"><small>kUS$</small></div>
       ${i.cb!=null&&i.cb!==""?`<span class="cbline">CB ${fmt(i.cb)}</span>`:""}</div></td>
     ${stagesCell}
     <td class="gate"></td>
@@ -796,27 +1016,30 @@ function renderAdj(){
   const sp=projects.reduce((s,p)=>s+pMonto(p),0),sa=adjSum(null);
   $("#adjBody").innerHTML=ajustes.map(a=>`<tr><td><b>${esc(a.nombre)}</b>${a.desc?`<div class="ref">${esc(a.desc)}</div>`:""}</td><td>${esc(a.tipo||"")}</td><td class="num neg">${fmt(a.monto)}</td></tr>`).join("")+
     `<tr class="sub"><td colspan="2">Proyectos en la matriz</td><td class="num">${fmt(sp)}</td></tr>`+
-    `<tr class="sub"><td colspan="2">Ajustes (restas PPTO 2027)</td><td class="num neg">${fmt(sa)}</td></tr>`+
-    `<tr class="tot"><td colspan="2">Total cartera PPTO 2027 · cuadra con CB 2027</td><td class="num">${fmt(sp+sa)}</td></tr>`;
+    `<tr class="sub"><td colspan="2">Ajustes (restas PPTO ${YR})</td><td class="num neg">${fmt(sa)}</td></tr>`+
+    `<tr class="tot"><td colspan="2">Total cartera PPTO ${YR}${YR===2027?" · cuadra con CB 2027":""}</td><td class="num">${fmt(sp+sa)}</td></tr>`;
 }
-function render(){renderSummary();renderRows();renderAdj();renderFin();renderCos();}
+function render(){renderSummary();renderRows();renderAdj();renderFin();renderCos();renderCum();if(lbId&&!$("#lbModal").hidden)renderLb();}
 
 /* ---------- escrituras ---------- */
 const now=()=>new Date().toISOString();
-function patchLocal(o,patch){for(const k in patch){if(k==="etapas"||k==="gates"||k==="plan")o[k]={...(o[k]||{}),...patch[k]};else o[k]=patch[k];}o.actualizado=now();}
+function patchLocal(o,patch){for(const k in patch){if(["etapas","gates","plan","lb","fc","real","f93","realm","proym","fism"].includes(k))o[k]={...(o[k]||{}),...patch[k]};else o[k]=patch[k];}o.actualizado=now();}
 function save(id,patch){const p=projects.find(x=>x.id===id);if(!p)return;patchLocal(p,patch);render();store.upd("proyectos",id,{...patch,actualizado:p.actualizado});}
 function saveIni(id,patch){const i=inis.find(x=>x.id===id);if(!i)return;patchLocal(i,patch);render();store.upd("iniciativas",id,{...patch,actualizado:i.actualizado});}
-function createProject(f){
-  const data={...f,etapas:{},gates:{},orden:Date.now(),actualizado:now()},id=store.newId();
-  projects.push({id,...data});render();store.add("proyectos",id,data);
+function createProject(f,kind){
+  const data={...f,anio:YR,etapas:{},gates:{},orden:Date.now(),actualizado:now()},id=store.newId();
+  DB.proyectos.push({id,...data});store.add("proyectos",id,data);
+  /* todo proyecto abre en iniciativas: se crea la primera con el nombre de la descripción */
+  const ini={proyectoId:id,nombre:f.desc||f.nombre,kind:kind||"ing",ppto:f.monto??null,cb:null,proveedor:"",oc:"",responsable:"",inicio:"",termino:"",etapas:{},orden:1,actualizado:now()},iid=store.newId();
+  DB.iniciativas.push({id:iid,...ini});ui.open.add(id);saveUi();render();store.add("iniciativas",iid,ini);
 }
 function createIni(f){
   const data={...f,etapas:{},orden:Date.now(),actualizado:now()},id=store.newId();
-  inis.push({id,...data});ui.open.add(f.proyectoId);saveUi();render();store.add("iniciativas",id,data);
+  DB.iniciativas.push({id,...data});ui.open.add(f.proyectoId);saveUi();render();store.add("iniciativas",id,data);
 }
 function removeProject(id){
   ui.confirm=null;const k=inis.filter(i=>i.proyectoId===id);
-  projects=projects.filter(p=>p.id!==id);inis=inis.filter(i=>i.proyectoId!==id);render();
+  inis=inis.filter(i=>i.proyectoId!==id);projects=projects.filter(p=>p.id!==id);render();
   k.forEach(i=>store.del("iniciativas",i.id));store.del("proyectos",id);
 }
 function removeIni(id){ui.confirm=null;inis=inis.filter(i=>i.id!==id);render();store.del("iniciativas",id);}
@@ -839,6 +1062,7 @@ $("#rows").addEventListener("click",e=>{
   if(!tr.dataset.id)return;const id=tr.dataset.id;
   const st=e.target.closest(".st");if(st){openPop(st,id,st.dataset.stage);return;}
   const gc=e.target.closest(".gch");if(gc){openPop(gc,id,gc.dataset.gate,"gates");return;}
+  const cb=e.target.closest("[data-cat]");if(cb){if(catOf(projects.find(x=>x.id===id))!==cb.dataset.cat)save(id,{categoria:cb.dataset.cat});return;}
   const tb=e.target.closest("[data-tipo]");if(tb){const p=projects.find(x=>x.id===id);save(id,{tipo:p.tipo===tb.dataset.tipo?"":tb.dataset.tipo});return;}
   const a=e.target.closest("[data-act]");if(!a)return;
   if(a.dataset.act==="add-ini"){e.stopPropagation();openIniForm(null,id);return;}
@@ -849,6 +1073,8 @@ $("#rows").addEventListener("click",e=>{
   if(a.dataset.act==="del-yes")removeProject(id);
 });
 $("#rows").addEventListener("change",e=>{
+  const nn=e.target.closest("[data-in]");
+  if(nn){const id=nn.closest("tr").dataset.ini,v=nn.value.replace(/\s+/g," ").trim()||"Sin nombre";const i=inis.find(x=>x.id===id);if(i&&i.nombre!==v)saveIni(id,{nombre:v});else nn.value=i?i.nombre:v;return;}
   const ii=e.target.closest("[data-if]");
   if(ii){const id=ii.closest("tr").dataset.ini,v=ii.value===""?null:Number(ii.value);const i=inis.find(x=>x.id===id);if(i&&i.ppto!==v)saveIni(id,{ppto:v});return;}
   const el=e.target.closest("[data-f]");if(!el)return;const id=el.closest("tr").dataset.id;
@@ -858,9 +1084,9 @@ $("#rows").addEventListener("change",e=>{
   const p=projects.find(x=>x.id===id);if(p&&p[f]===v)return;
   save(id,{[f]:v});
 });
-$("#rows").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input"))e.target.blur();});
-$("#fTipo").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ui.tipo=b.dataset.v;
-  document.querySelectorAll("#fTipo button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));saveUi();renderRows();});
+$("#rows").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input,textarea")){e.preventDefault();e.target.blur();}});
+["#fTipo","#fTipoF","#fTipoC"].forEach(s=>$(s).addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ui.tipo=b.dataset.v;syncFilt();saveUi();render();}));
+["#fCat","#fCatF","#fCatC"].forEach(s=>$(s).addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ui.cat=b.dataset.v;syncFilt();saveUi();render();}));
 $("#fFase").addEventListener("change",e=>{ui.fase=e.target.value;saveUi();renderRows();});
 $("#fQ").addEventListener("input",e=>{ui.q=e.target.value;renderRows();});
 $("#fHide").addEventListener("change",e=>{ui.hide=e.target.checked;saveUi();renderRows();});
@@ -891,7 +1117,9 @@ function openPop(btn,id,stage,kind){
     const etapas={[stage]:v};
     // un solo "foco" por proyecto o iniciativa
     if(v==="pin")stages.forEach(s=>{if(s.k!==stage&&(obj.etapas||{})[s.k]==="pin")etapas[s.k]="pend";});
-    kind==="ini"?saveIni(id,{etapas}):save(id,{etapas});
+    if(kind==="ini"){const pt={etapas},r=obj.real||{};
+      if(v==="ok"&&!r[stage])pt.real={[stage]:hoy()};else if(v!=="ok"&&r[stage])pt.real={[stage]:""};
+      saveIni(id,pt);}else save(id,{etapas});
   });
   (pop.querySelector(".cur")||pop.querySelector("button")).focus();
 }
@@ -926,16 +1154,22 @@ const ICON_S={
 
 
 /* ---------- flujos financieros (plan mensual) ---------- */
-const MESES=(()=>{const a=[];for(let y=2026,m=10;y<2027||(y===2027&&m<=12);){a.push(`${y}-${String(m).padStart(2,"0")}`);m++;if(m>12){m=1;y++;}}return a;})();
+/* rango de meses de cada cartera: 2026 = ene–dic 2026 · 2027 = oct-2026 a dic-2027 */
+const YINI={2026:"2026-01",2027:"2026-10"};
+let MESES,MY,MPRE,FKEYS,CYP,CYY,CYN;
+function setYearVars(){const a=[];let [y,m]=(YINI[YR]||YR+"-01").split("-").map(Number);
+  while(y<YR||(y===YR&&m<=12)){a.push(`${y}-${String(m).padStart(2,"0")}`);m++;if(m>12){m=1;y++;}}
+  MESES=a;MY=a.filter(k=>k.startsWith(String(YR)));MPRE=a.filter(k=>!k.startsWith(String(YR)));
+  const yy=YR%100;CYP="CY"+(yy-1);CYY="CY"+yy;CYN="CY"+(yy+1);FKEYS=[CYP,...MY,CYN];}
+setYearVars();
 const MN=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 const mLabel=k=>MN[+k.slice(5)-1];
 const mLong=k=>MN[+k.slice(5)-1]+"-"+k.slice(2,4);
 const NOWK=(()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;})();
-const M27=MESES.filter(k=>k.startsWith("2027")),M26=MESES.filter(k=>k.startsWith("2026"));
 /* partidas: cada iniciativa, o el proyecto completo si no tiene iniciativas */
 function partidas(){
   const out=[];
-  projects.forEach(p=>{const k=kidsOf(p);
+  projects.filter(fOk).forEach(p=>{const k=kidsOf(p);
     if(k.length){out.push({head:true,p,kids:k});k.forEach(i=>out.push({kind:"ini",id:i.id,o:i,p,nombre:i.nombre,ppto:num(i.ppto)}));}
     else out.push({kind:"proy",id:p.id,o:p,p,nombre:p.nombre,ppto:pMonto(p),solo:true});
   });
@@ -945,88 +1179,163 @@ const planOf=o=>o.plan||{};
 const sumKeys=(o,keys)=>keys.reduce((s,k)=>s+num(planOf(o)[k]),0);
 function monthTotals(){const leaves=partidas().filter(x=>!x.head);return MESES.map(k=>leaves.reduce((s,x)=>s+num(planOf(x.o)[k]),0));}
 
+/* series de flujo: plan (PPTO), forecast 9+3 y real + proyección
+   iniciativa/proyecto: plan{mes}, f93{mes}, realm{mes} (real cerrado), proym{mes} (proyección editable; si falta se usa 9+3 y luego plan) */
+let finSer="plan";try{finSer=localStorage.getItem("gpro-finser")||"plan"}catch(e){}
+const SERIES={plan:"Plan (PPTO)",f93:"Forecast 9+3",rp:"Real + proyección"};
+const has=v=>v!=null&&v!=="";
+let LR=null;   // último mes con real cerrado (se calcula en cada render)
+function calcLR(){const leaves=partidasAll();let m=null;leaves.forEach(x=>Object.entries(x.o.realm||{}).forEach(([k,v])=>{if(has(v)&&MESES.includes(k)&&(!m||k>m))m=k;}));return m;}
+function partidasAll(){const out=[];projects.forEach(p=>{const k=kidsOf(p);if(k.length)k.forEach(i=>out.push({o:i,kind:"ini"}));else out.push({o:p,kind:"proy"});});return out;}
+function projOf(o,k){const pv=(o.proym||{})[k];if(has(pv))return num(pv);if(o.f93&&typeof o.f93==="object")return num(o.f93[k]);return num(planOf(o)[k]);}
+function serVal(o,k,ser){
+  if(ser==="plan")return num(planOf(o)[k]);
+  if(ser==="f93")return num((o.f93||{})[k]);
+  return LR&&k<=LR?num((o.realm||{})[k]):projOf(o,k);
+}
+const serSum=(o,keys,ser)=>keys.reduce((s,k)=>s+serVal(o,k,ser),0);
+function serTotals(ser){const leaves=partidas().filter(x=>!x.head);return MESES.map(k=>leaves.reduce((s,x)=>s+serVal(x.o,k,ser),0));}
+const hasF93=()=>partidas().some(x=>!x.head&&Object.values(x.o.f93||{}).some(has));
+
 function renderFin(){
   if($("#tabFin").hidden)return;
   $("#xlsBtn2").hidden=$("#xlsBtn").hidden;
-  const parts=partidas(),leaves=parts.filter(x=>!x.head);
-  const mt=monthTotals(),tot27=M27.reduce((s,k)=>s+mt[MESES.indexOf(k)],0),tot26=M26.reduce((s,k)=>s+mt[MESES.indexOf(k)],0);
-  const ppto=leaves.reduce((s,x)=>s+x.ppto,0),dif=+(tot27-ppto).toFixed(1);
-  const iNow=MESES.indexOf(NOWK),acum=iNow>=0?mt.slice(0,iNow+1).reduce((a,b)=>a+b,0):0;
+  LR=calcLR();
+  const parts=partidas(),leaves=parts.filter(x=>!x.head),f93on=hasF93();
+  if(finSer==="f93"&&!f93on)finSer="plan";
+  const tP=serTotals("plan"),tF=serTotals("f93"),tR=serTotals("rp");
+  const sY=t=>MY.reduce((s,k)=>s+t[MESES.indexOf(k)],0);
+  const ppto=leaves.reduce((s,x)=>s+x.ppto,0),plan=sY(tP),f93=sY(tF),cierre=sY(tR);
+  const iLR=LR?MESES.indexOf(LR):-1,realAc=iLR>=0?tR.slice(0,iLR+1).reduce((a,b)=>a+b,0):0,planAc=iLR>=0?tP.slice(0,iLR+1).reduce((a,b)=>a+b,0):0;
+  const dl=(v,ref)=>{const d=+(v-ref).toFixed(1);return d?`<span class="${d>0?"up":"dn"}">${d>0?"+":""}${fmt(d)}</span>`:"✓ 0";};
   const sinPlan=leaves.filter(x=>!MESES.some(k=>num(planOf(x.o)[k]))).length;
-  $("#finKpi").innerHTML=`
-    <div class="chip total"><div class="lab">PPTO 2027</div><div class="num">${fmt(ppto)}<small>kUS$</small></div><div class="sub">${leaves.length} partidas · sin ajustes de cartera</div></div>
-    <div class="chip"><div class="lab">Plan 2027</div><div class="num n-capex">${fmt(tot27)}<small>kUS$</small></div><div class="sub">ene a dic 2027</div></div>
-    <div class="chip"><div class="lab">Cuadre plan vs PPTO</div><div class="num ${dif?"n-red":""}" style="${dif?"":"color:var(--green)"}">${dif?fmt(dif):"✓ 0"}</div><div class="sub">${dif>0?"Plan excede el PPTO":dif<0?"Falta planificar":"Plan 2027 cuadra con PPTO"}</div></div>
-    <div class="chip"><div class="lab">Plan oct–dic 2026</div><div class="num">${fmt(tot26)}<small>kUS$</small></div><div class="sub">acumulado a ${mLong(NOWK)}: ${fmt(acum)}</div></div>
-    <div class="chip"><div class="lab">Partidas sin plan</div><div class="num" style="color:var(--gold)">${sinPlan}</div><div class="sub">de ${leaves.length} partidas</div></div>`;
-  renderCurve(mt);
+  /* indicadores del status financiero: mes elegido (o FY) */
+  const selM=finFY?null:(evmM&&MESES.includes(evmM)?evmM:LR),iS=selM?MESES.indexOf(selM):-1,mmL=k=>mLong(k).toLowerCase();
+  const MN_L=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"],mesNom=k=>MN_L[+k.slice(5)-1];
+  const acc=(t,n)=>t.slice(0,n+1).reduce((a,b)=>a+b,0),pctTx=(a,b)=>b?Math.round(a/b*100)+"%":"—",proj=k=>LR&&k>LR;
+  const fx=v=>(v>0?"+":"")+fmt(+v.toFixed(1));
+  let c1,c2,c3;
+  if(finFY){
+    c1=`<div class="chip total"><div class="lab">Cumplimiento financiero FY</div><div class="num">${pctTx(realAc,ppto)}</div><div class="sub">${fmt(realAc)} de ${fmt(ppto)} kUS$ ppto. anual${LR?" · real a "+mmL(LR):""}</div></div>`;
+    c2=`<div class="chip"><div class="lab">Desviación FY</div><div class="num ${cierre-ppto>0?"n-red":""}">${fx(cierre-ppto)}<small>kUS$</small></div><div class="sub">proyección cierre vs PPTO anual</div></div>`;
+    const lm=LR?MESES.indexOf(LR):-1;
+    c3=`<div class="chip"><div class="lab">Ejecución FY</div><div class="num">${pctTx(cierre,plan)}</div><div class="sub">${fmt(cierre)} real + proyección de ${fmt(plan)} kUS$ planificado</div></div>`;
+  }else if(iS>=0){
+    const rA=acc(tR,iS),pA=acc(tP,iS),rM=tR[iS],pM=tP[iS],pj=proj(selM);
+    c1=`<div class="chip total"><div class="lab">Cumplimiento financiero YTD</div><div class="num">${pctTx(rA,pA)}</div><div class="sub">${fmt(rA)} de ${fmt(pA)} kUS$ presupuestado${pj?" · incluye proyección":""}</div></div>`;
+    c2=`<div class="chip"><div class="lab">Desviación</div><div class="num ${rA-pA>0?"n-red":""}">${fx(rA-pA)}<small>kUS$</small></div><div class="sub">financiero acumulado a ${mmL(selM)}</div></div>`;
+    c3=`<div class="chip"><div class="lab">Ejecución de ${mesNom(selM)}${pj?" (proy.)":""}</div><div class="num">${pctTx(rM,pM)}</div><div class="sub">${fmt(rM)} de ${fmt(pM)} kUS$ ppto. del mes</div></div>`;
+  }else{
+    c1=`<div class="chip total"><div class="lab">Cumplimiento financiero YTD</div><div class="num">—</div><div class="sub">aún sin meses cerrados como real</div></div>`;c2=c3=`<div class="chip"><div class="lab">—</div><div class="num">—</div></div>`;
+  }
+  const c4=`<div class="chip"><div class="lab">Proyección cierre ${f93on?"9+3":YR}</div><div class="num" style="color:#B07D00">${fmt(cierre)}<small>kUS$</small></div><div class="sub">${fx(cierre-ppto)} vs ${fmt(ppto)} ppto. (${pctTx(cierre,ppto)})</div></div>`;
+  const c5=(()=>{const E=evmTot();const mm=EM();if(!E)return `<div class="chip"><div class="lab">CPI</div><div class="num">—</div><div class="sub">se calcula al cerrar meses con real</div></div>`;
+      return `<div class="chip"><div class="lab">CPI a ${mmL(mm)}</div><div class="num ${cpiCls(E.cpi)}">${E.cpi==null?"—":E.cpi.toFixed(2)}</div><div class="sub">EV ${fmt(E.ev)} ÷ AC ${fmt(E.ac)}</div></div>`;})();
+  $("#finKpi").innerHTML=c1+c2+c3+c4+c5;
+  $("#finMes").innerHTML=MESES.filter(k=>k.startsWith(String(YR))).map(k=>`<button type="button" data-fm="${k}" aria-pressed="${!finFY&&k===selM}" class="${proj(k)?"pj":""}" title="${mLong(k)}${proj(k)?" · proyectado":""}">${mLabel(k)}</button>`).join("")+`<button type="button" data-fm="FY" aria-pressed="${finFY}" title="Año completo">FY</button>`;
+  renderCurve(tP,f93on?tF:null,tR);
+  renderEvm();
+  // selector de serie
+  const nx=LR?MESES[MESES.indexOf(LR)+1]:MESES[0];
+  $("#finSer").innerHTML=Object.entries(SERIES).filter(([k])=>k!=="f93"||f93on).map(([k,t])=>`<button type="button" data-ser="${k}" aria-pressed="${finSer===k}">${t}</button>`).join("");
+  $("#finClose").hidden=finSer!=="rp"||!nx;$("#finClose").textContent=nx?`Cerrar ${mLong(nx).toLowerCase()} como real`:"";
+  $("#finReopen").hidden=finSer!=="rp"||!LR;$("#finReopen").textContent=LR?`Reabrir ${mLong(LR).toLowerCase()}`:"";
+  $("#finHint").textContent=finSer==="plan"?"escribe en cualquier celda para corregir el plan":finSer==="f93"?"forecast del ejercicio 9+3 (editable)":
+    `meses hasta ${LR?mLong(LR).toLowerCase():"—"} = real · resto = proyección (en gris, por defecto el 9+3; escribe para cambiarla)`;
   // tabla
+  const isR=k=>finSer==="rp"&&LR&&k<=LR;
   const head=`<colgroup><col style="width:230px"><col style="width:72px">${MESES.map(()=>"<col>").join("")}<col style="width:78px"><col style="width:72px"></colgroup>
-    <thead><tr class="yr"><th class="nm" rowspan="2" style="vertical-align:bottom">Proyecto / iniciativa</th><th class="pp" rowspan="2" style="vertical-align:bottom">PPTO 2027</th>
-      <th colspan="${M26.length}">2026</th><th colspan="${M27.length}">2027</th><th class="tt" rowspan="2" style="vertical-align:bottom">Total 2027</th><th rowspan="2" style="vertical-align:bottom">Dif. vs PPTO</th></tr>
-    <tr class="ms">${MESES.map(k=>`<th class="${k===NOWK?"now":""}" title="${mLong(k)}">${mLabel(k)}</th>`).join("")}</tr></thead>`;
-  const cells=(o,kind)=>MESES.map(k=>{const v=planOf(o)[k];return `<td class="m ${k===NOWK?"now":""}"><input type="number" step="0.1" inputmode="decimal" placeholder="·" value="${v??""}" data-plan="${k}" data-pk="${kind}" data-pid="${o.id}" aria-label="Plan ${mLong(k)} ${esc(o.nombre)}"></td>`}).join("");
+    <thead><tr class="yr"><th class="nm" rowspan="2" style="vertical-align:bottom">Proyecto / iniciativa</th><th class="pp" rowspan="2" style="vertical-align:bottom">PPTO ${YR}</th>
+      ${MPRE.length?`<th colspan="${MPRE.length}">${YR-1}</th>`:""}<th colspan="${MY.length}">${YR} · ${esc(SERIES[finSer])}</th><th class="tt" rowspan="2" style="vertical-align:bottom">Total ${YR}</th><th rowspan="2" style="vertical-align:bottom">Dif. vs PPTO</th></tr>
+    <tr class="ms">${MESES.map(k=>`<th class="${k===NOWK?"now":""} ${isR(k)?"rm":""}" title="${mLong(k)}${finSer==="rp"?(isR(k)?" · real":" · proyección"):""}">${mLabel(k)}${isR(k)?"<i>R</i>":""}</th>`).join("")}</tr></thead>`;
+  const fieldOf=k=>finSer==="plan"?"plan":finSer==="f93"?"f93":isR(k)?"realm":"proym";
+  const cells=(o,kind)=>MESES.map(k=>{const f=fieldOf(k),raw=(o[f]||{})[k],pj=f==="proym";
+    const ph=pj?fmt(projOf(o,k)):"·";
+    return `<td class="m ${k===NOWK?"now":""} ${pj?"pj":""} ${f==="realm"?"rm":""}"><input type="number" step="0.1" inputmode="decimal" placeholder="${ph==="—"?"·":ph}" value="${has(raw)?raw:""}" data-plan="${k}" data-f="${f}" data-pk="${kind}" data-pid="${o.id}" aria-label="${esc(SERIES[finSer])} ${mLong(k)} ${esc(o.nombre)}"></td>`}).join("");
   const difCell=(t,p)=>{const d=+(t-p).toFixed(1);return `<td class="dif ${t===0?"":d?"bad":"ok"}">${t===0?"—":d?fmt(d):"✓"}</td>`;};
   let rows="";
   parts.forEach(x=>{
-    if(x.head){const k=x.kids,sums=MESES.map(m=>k.reduce((s,i)=>s+num(planOf(i)[m]),0)),t27=M27.reduce((s,m)=>s+sums[MESES.indexOf(m)],0),pp=k.reduce((s,i)=>s+num(i.ppto),0);
-      rows+=`<tr class="fp"><td class="nm" title="${esc(x.p.nombre)}">${esc(x.p.nombre)}</td><td class="pp">${fmt(pp)}</td>${sums.map((v,j)=>`<td class="${MESES[j]===NOWK?"now":""}">${v?fmt(v):""}</td>`).join("")}<td class="tt">${fmt(t27)}</td>${difCell(t27,pp)}</tr>`;return;}
-    const t27=sumKeys(x.o,M27);
-    rows+=`<tr class="${x.solo?"fp fsolo":"fk"}"><td class="nm" title="${esc(x.nombre)}">${x.kind==="ini"?`<span class="kdot ${x.o.kind}" style="display:inline-block;margin-right:6px"></span>`:""}${esc(x.nombre)}</td><td class="pp">${fmt(x.ppto)}</td>${cells(x.o,x.kind)}<td class="tt">${fmt(t27)}</td>${difCell(t27,x.ppto)}</tr>`;
+    if(x.head){const k=x.kids,sums=MESES.map(m=>k.reduce((s,i)=>s+serVal(i,m,finSer),0)),t=MY.reduce((s,m)=>s+sums[MESES.indexOf(m)],0),pp=k.reduce((s,i)=>s+num(i.ppto),0);
+      rows+=`<tr class="fp"><td class="nm" title="${esc(x.p.nombre)}">${esc(x.p.nombre)}</td><td class="pp">${fmt(pp)}</td>${sums.map((v,j)=>`<td class="${MESES[j]===NOWK?"now":""}">${v?fmt(v):""}</td>`).join("")}<td class="tt">${fmt(t)}</td>${difCell(t,pp)}</tr>`;return;}
+    const t=serSum(x.o,MY,finSer);
+    rows+=`<tr class="${x.solo?"fp fsolo":"fk"}"><td class="nm" title="${esc(x.nombre)}">${x.kind==="ini"?`<span class="kdot ${x.o.kind}" style="display:inline-block;margin-right:6px"></span>`:""}${esc(x.nombre)}</td><td class="pp">${fmt(x.ppto)}</td>${cells(x.o,x.kind)}<td class="tt">${fmt(t)}</td>${difCell(t,x.ppto)}</tr>`;
   });
-  rows+=`<tr class="ftot"><td class="nm">Total cartera</td><td class="pp">${fmt(ppto)}</td>${mt.map((v,j)=>`<td>${v?fmt(v):""}</td>`).join("")}<td class="tt">${fmt(tot27)}</td>${difCell(tot27,ppto)}</tr>`;
+  const mt=finSer==="plan"?tP:finSer==="f93"?tF:tR,tt=sY(mt);
+  rows+=`<tr class="ftot"><td class="nm">Total cartera</td><td class="pp">${fmt(ppto)}</td>${mt.map(v=>`<td>${v?fmt(v):""}</td>`).join("")}<td class="tt">${fmt(tt)}</td>${difCell(tt,ppto)}</tr>`;
   const ae=document.activeElement,keep=ae&&ae.dataset&&ae.dataset.plan?[ae.dataset.pid,ae.dataset.plan]:null;
   $("#finTable").innerHTML=head+`<tbody>${rows}</tbody>`;
   if(keep){const el=document.querySelector(`#finTable input[data-pid="${keep[0]}"][data-plan="${keep[1]}"]`);if(el)el.focus();}
 }
-function renderCurve(mt){
-  const box=$("#curve"),any=mt.some(v=>v);
-  let acc=0;const cum=mt.map(v=>acc+=v);
-  $("#curveSub").textContent=any?`Total oct-26 a dic-27: ${fmt(acc)} kUS$`:"";
-  if(!any){box.innerHTML=`<div class="cempty">Aún no hay plan mensual cargado. Envíame la planilla con el plan o escribe los montos en la tabla de abajo.</div>`;return;}
-  const W=960,H=240,L=58,R=18,T=16,B=30,n=MESES.length,max=Math.max(...cum)*1.08||1;
+function renderCurve(tP,tF,tR){
+  const box=$("#curve"),any=tP.some(v=>v)||(tF&&tF.some(v=>v))||tR.some(v=>v);
+  const cumOf=a=>{let s=0;return a.map(v=>s+=v);};
+  const cP=cumOf(tP),cF=tF?cumOf(tF):null,cR=cumOf(tR),n=MESES.length,iLR=LR?MESES.indexOf(LR):-1;
+  $("#curveSub").innerHTML=any?`<span class="lg"><i class="lp"></i>Plan ${fmt(cP[n-1])}</span>${cF?`<span class="lg"><i class="lf"></i>9+3 ${fmt(cF[n-1])}</span>`:""}<span class="lg"><i class="lr"></i>Real${iLR>=0?" a "+mLong(LR).toLowerCase()+" "+fmt(cR[iLR]):""}</span><span class="lg"><i class="lj"></i>Proyección cierre ${fmt(cR[n-1])}</span>`:"";
+  renderCpiStrip();
+  if(!any){box.innerHTML=`<div class="cempty">Aún no hay flujos cargados. Escribe los montos en la tabla de abajo.</div>`;return;}
+  const W=960,H=260,L=58,R=18,T=16,B=30,max=Math.max(...cP,...(cF||[0]),...cR)*1.08||1;
   const x=i=>L+(W-L-R)*i/(n-1),y=v=>T+(H-T-B)*(1-v/max);
   const ticks=4,step=Math.pow(10,Math.floor(Math.log10(max/ticks)));const nice=[1,2,2.5,5,10].map(f=>f*step).find(s=>max/s<=ticks+1)||step*10;
   let grid="";for(let v=0;v<=max;v+=nice)grid+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#E2E7EA" stroke-width="1"/><text x="${L-8}" y="${y(v)+3.5}" text-anchor="end" font-size="10" fill="#8A97A0">${fmt(v)}</text>`;
-  const pts=cum.map((v,i)=>`${x(i)},${y(v)}`).join(" ");
-  const area=`M${x(0)},${y(0)} L${pts.replace(/ /g," L")} L${x(n-1)},${y(0)} Z`;
+  const pl=(c,a=0,b=n-1)=>c.slice(a,b+1).map((v,j)=>`${x(a+j)},${y(v)}`).join(" ");
+  const area=`M${x(0)},${y(0)} L${pl(cP).replace(/ /g," L")} L${x(n-1)},${y(0)} Z`;
   const iNow=MESES.indexOf(NOWK);
   const xl=MESES.map((k,i)=>`<text x="${x(i)}" y="${H-10}" text-anchor="middle" font-size="10" fill="${k===NOWK?"#00778B":"#8A97A0"}" font-weight="${k===NOWK?"bold":"normal"}">${mLabel(k)}${k.endsWith("-01")||i===0?"·"+k.slice(2,4):""}</text>`).join("");
-  const sep=`<line x1="${(x(2)+x(3))/2}" x2="${(x(2)+x(3))/2}" y1="${T}" y2="${H-B}" stroke="#E2E7EA" stroke-dasharray="3 3"/>`;
+  const sep=MPRE.length?`<line x1="${(x(MPRE.length-1)+x(MPRE.length))/2}" x2="${(x(MPRE.length-1)+x(MPRE.length))/2}" y1="${T}" y2="${H-B}" stroke="#E2E7EA" stroke-dasharray="3 3"/>`:"";
   const now=iNow>=0?`<line x1="${x(iNow)}" x2="${x(iNow)}" y1="${T}" y2="${H-B}" stroke="#64CCC9" stroke-width="2"/><text x="${x(iNow)+5}" y="${T+10}" font-size="10" fill="#00778B" font-weight="bold">Hoy</text>`:"";
-  const last=cum[n-1];
-  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Curva S del plan acumulado, de ${fmt(0)} a ${fmt(last)} kUS$">
-    ${grid}${sep}<path d="${area}" fill="#00778B" fill-opacity=".08"/>${now}
-    <polyline points="${pts}" fill="none" stroke="#00778B" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="${x(n-1)}" cy="${y(last)}" r="4" fill="#00778B" stroke="#fff" stroke-width="2"/>
-    <text x="${x(n-1)-8}" y="${y(last)-10}" text-anchor="end" font-size="11" font-weight="bold" fill="#253746">Plan ${fmt(last)}</text>
+  const real=iLR>=0?`<polyline points="${pl(cR,0,iLR)}" fill="none" stroke="#4C8C2B" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`:"";
+  const proj=`<polyline points="${pl(cR,Math.max(0,iLR),n-1)}" fill="none" stroke="#4C8C2B" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round"/>`;
+  const f93=cF?`<polyline points="${pl(cF)}" fill="none" stroke="#EAAA00" stroke-width="2" stroke-dasharray="2 3" stroke-linejoin="round"/>`:"";
+  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Curva S: plan ${fmt(cP[n-1])}, real más proyección ${fmt(cR[n-1])} kUS$">
+    ${grid}${sep}<path d="${area}" fill="#00778B" fill-opacity=".07"/>${now}
+    <polyline points="${pl(cP)}" fill="none" stroke="#00778B" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${f93}${proj}${real}
+    ${iLR>=0?`<circle cx="${x(iLR)}" cy="${y(cR[iLR])}" r="4" fill="#4C8C2B" stroke="#fff" stroke-width="2"/>`:""}
+    ${(()=>{const im=evmM&&!finFY?MESES.indexOf(evmM):-1;return im>=0?`<line x1="${x(im)}" x2="${x(im)}" y1="${T}" y2="${H-B}" stroke="#253746" stroke-width="1.5" stroke-dasharray="4 3"/><circle cx="${x(im)}" cy="${y(cR[im])}" r="5" fill="#253746" stroke="#fff" stroke-width="2"/>`:"";})()}
+    <circle cx="${x(n-1)}" cy="${y(cP[n-1])}" r="4" fill="#00778B" stroke="#fff" stroke-width="2"/>
+    <circle cx="${x(n-1)}" cy="${y(cR[n-1])}" r="4" fill="#fff" stroke="#4C8C2B" stroke-width="2"/>
     ${xl}
     <line id="cx" x1="0" x2="0" y1="${T}" y2="${H-B}" stroke="#8A97A0" stroke-width="1" visibility="hidden"/>
-    <circle id="cd" r="4.5" fill="#00778B" stroke="#fff" stroke-width="2" visibility="hidden"/>
     <rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}" fill="transparent" id="chit"/></svg><div class="tip" hidden></div>`;
-  const svg=box.querySelector("svg"),tip=box.querySelector(".tip"),cx=svg.querySelector("#cx"),cd=svg.querySelector("#cd");
+  const svg=box.querySelector("svg"),tip=box.querySelector(".tip"),cx=svg.querySelector("#cx");
   const move=ev=>{const r=svg.getBoundingClientRect(),px=(ev.clientX-r.left)*W/r.width;
     const i=Math.max(0,Math.min(n-1,Math.round((px-L)/(W-L-R)*(n-1))));
     cx.setAttribute("x1",x(i));cx.setAttribute("x2",x(i));cx.setAttribute("visibility","visible");
-    cd.setAttribute("cx",x(i));cd.setAttribute("cy",y(cum[i]));cd.setAttribute("visibility","visible");
-    tip.hidden=false;tip.style.left=(x(i)*r.width/W)+"px";tip.style.top=(y(cum[i])*r.height/H)+"px";
-    tip.innerHTML=`<b>${mLong(MESES[i])}</b>Plan del mes: ${fmt(mt[i])} kUS$<br>Acumulado: ${fmt(cum[i])} kUS$`;};
+    tip.hidden=false;tip.style.left=(x(i)*r.width/W/ZOOM)+"px";tip.style.top=(y(Math.max(cP[i],cR[i]))*r.height/H/ZOOM)+"px";
+    const ce=LR&&MESES[i]<=LR?evmTot(MESES[i]):null;
+    tip.innerHTML=`<b>${mLong(MESES[i])}</b>${ce?`<span class="tcpi ${cpiCls(ce.cpi)}">CPI ${ce.cpi==null?"—":ce.cpi.toFixed(2)}</span> · toca para analizar<br>`:""}Plan: ${fmt(tP[i])} · acum. ${fmt(cP[i])}${cF?`<br>9+3: ${fmt(tF[i])} · acum. ${fmt(cF[i])}`:""}<br>${iLR>=i?"Real":"Proyección"}: ${fmt(tR[i])} · acum. ${fmt(cR[i])}`;};
   svg.querySelector("#chit").addEventListener("pointermove",move);
-  svg.querySelector("#chit").addEventListener("pointerleave",()=>{tip.hidden=true;cx.setAttribute("visibility","hidden");cd.setAttribute("visibility","hidden");});
+  svg.querySelector("#chit").addEventListener("click",ev=>{const r=svg.getBoundingClientRect(),px=(ev.clientX-r.left)*W/r.width;
+    const i=Math.max(0,Math.min(n-1,Math.round((px-L)/(W-L-R)*(n-1))));
+    finFY=false;evmM=MESES[i]===LR?null:MESES[i];renderFin();});
+  svg.querySelector("#chit").addEventListener("pointerleave",()=>{tip.hidden=true;cx.setAttribute("visibility","hidden");});
 }
 $("#xlsBtn2").addEventListener("click",()=>$("#xlsBtn").click());
+$("#evmBox").addEventListener("change",e=>{const el=e.target.closest("[data-fis]");if(!el)return;let v=el.value===""?null:Math.max(0,Math.min(100,Number(el.value)));save(el.dataset.fis,{fism:{[EM()]:v}});});
+$("#evmSub").addEventListener("click",e=>{if(e.target.id==="evmReset"){evmM=null;renderFin();}});
+$("#cpiStrip").addEventListener("click",e=>{const b=e.target.closest("[data-cm]");if(!b)return;finFY=false;evmM=b.dataset.cm===LR?null:b.dataset.cm;renderFin();});
+$("#finMes").addEventListener("click",e=>{const b=e.target.closest("[data-fm]");if(!b)return;if(b.dataset.fm==="FY"){finFY=!finFY;}else{finFY=false;evmM=b.dataset.fm===LR?null:b.dataset.fm;}renderFin();});
+$("#evmBox").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input")){e.preventDefault();e.target.blur();}});
+$("#finSer").addEventListener("click",e=>{const b=e.target.closest("[data-ser]");if(!b)return;finSer=b.dataset.ser;try{localStorage.setItem("gpro-finser",finSer)}catch(_){}renderFin();});
+/* cerrar mes: el real del mes parte con la proyección vigente (se corrige después en la tabla) */
+$("#finClose").addEventListener("click",()=>{LR=calcLR();const nx=LR?MESES[MESES.indexOf(LR)+1]:MESES[0];if(!nx)return;
+  partidasAll().forEach(x=>{const v=+projOf(x.o,nx).toFixed(1);x.kind==="ini"?saveIni(x.o.id,{realm:{[nx]:v}}):save(x.o.id,{realm:{[nx]:v}});});
+  toast(`${mLong(nx)} cerrado como real · corrige los montos en la tabla`);});
+$("#finReopen").addEventListener("click",()=>{LR=calcLR();if(!LR)return;const k=LR;
+  partidasAll().forEach(x=>{if(has((x.o.realm||{})[k]))x.kind==="ini"?saveIni(x.o.id,{realm:{[k]:null}}):save(x.o.id,{realm:{[k]:null}});});
+  toast(`${mLong(k)} reabierto como proyección`);});
 $("#finTable").addEventListener("change",e=>{
   const el=e.target.closest("[data-plan]");if(!el)return;
-  const v=el.value===""?null:Number(el.value),k=el.dataset.plan,id=el.dataset.pid;
-  el.dataset.pk==="ini"?saveIni(id,{plan:{[k]:v}}):save(id,{plan:{[k]:v}});
+  const v=el.value===""?null:Number(el.value),k=el.dataset.plan,id=el.dataset.pid,f=el.dataset.f||"plan";
+  el.dataset.pk==="ini"?saveIni(id,{[f]:{[k]:v}}):save(id,{[f]:{[k]:v}});
 });
 $("#finTable").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("input")){e.preventDefault();e.target.blur();}});
 /* pestañas */
 function setTab(t){
   document.querySelectorAll(".tabs [data-tab]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===t)));
-  $("#tabEnt").hidden=t!=="ent";$("#tabFin").hidden=t!=="fin";$("#tabCos").hidden=t!=="cos";
+  $("#tabEnt").hidden=t!=="ent";$("#tabFin").hidden=t!=="fin";$("#tabCos").hidden=t!=="cos";$("#tabCum").hidden=t!=="cum";
   try{localStorage.setItem("gpro-tab",t)}catch(e){}
-  if(t==="fin")renderFin();if(t==="cos")renderCos();
+  if(t==="fin")renderFin();if(t==="cos")renderCos();if(t==="cum")renderCum();
 }
 document.querySelector(".tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)setTab(b.dataset.tab);});
 
@@ -1046,7 +1355,6 @@ const CCOLS=[
   {k:"eac",h:"EAC",n:8,t:"EAC (estimado a término)"},
   {k:"var",h:"Variación EAC",n:9,t:"Variación EAC vs aprobado",calc:1}
 ];
-const FKEYS=["CY26",...M27,"CY28"];      // columnas del flujo de costos
 let cosSel=null,cosView="part";const cosOpen=new Set();
 try{cosSel=localStorage.getItem("gpro-cos");cosView=localStorage.getItem("gpro-cosv")||"part";JSON.parse(localStorage.getItem("gpro-coso")||"[]").forEach(x=>cosOpen.add(x));}catch(e){}
 const saveOpen=()=>{try{localStorage.setItem("gpro-coso",JSON.stringify([...cosOpen]))}catch(e){}};
@@ -1081,8 +1389,8 @@ function curCos(){const opts=cosOptions();if(!opts.length)return null;
   let o=opts.find(x=>x.v===cosSel)||opts.find(x=>x.p&&"p:"+x.p.id===cosSel);if(!o)o=opts.find(x=>x.r)||opts[0];cosSel=o.v;return o;}
 function ensureCos(o){
   if(o.r)return o.r.id;
-  const data={nombre:o.p.nombre,proyectoId:o.p.id,pep:o.p.pep||"",periodo:NOWK,lines:{},items:[],orden:Date.now(),actualizado:now()},id=store.newId();
-  costos.push({id,...data});store.add("costos",id,data);cosSel=id;o.r=costos.find(c=>c.id===id);o.v=id;
+  const data={nombre:o.p.nombre,proyectoId:o.p.id,pep:o.p.pep||"",anio:YR,periodo:NOWK,lines:{},items:[],orden:Date.now(),actualizado:now()},id=store.newId();
+  DB.costos.push({id,...data});store.add("costos",id,data);cosSel=id;o.r=costos.find(c=>c.id===id);o.v=id;
   try{localStorage.setItem("gpro-cos",id)}catch(_){}return id;
 }
 const tog=(key,open,label)=>`<button class="tog sm" data-ctog="${key}" aria-expanded="${open}" aria-label="${open?"Contraer":"Expandir"} ${esc(label)}">${open?"▾":"▸"}</button>`;
@@ -1112,15 +1420,15 @@ function renderCos(){
     <div class="chip"><div class="lab">EAC</div><div class="num">${fmt(eac)}<small>kUS$</small></div><div class="sub">estimado a término</div></div>
     <div class="chip"><div class="lab">Variación EAC</div><div class="num ${vr>0.05?"n-red":""}" style="${vr>0.05?"":"color:var(--green)"}">${Math.abs(vr)>0.05?fmt(vr):"0"}</div><div class="sub">${vr>0.05?"Sobrecosto vs aprobado":vr<-0.05?"Bajo el aprobado":"En línea con el aprobado"}</div></div>`;
   const vcls=v=>v>0.05?"vbad":v<-0.05?"vok":"";
-  const open27=cosYears.has("2027");
+  const open27=cosYears.has(String(YR));
   /* columnas de flujo: CY26 · [meses 2027 si está abierto] · CY27 · CY28 */
-  const FCOLS=[{k:"CY26",cy:1},...(open27?M27.map(k=>({k,m:1})):[]),{k:"CY27",calc:1,cy:1},{k:"CY28",cy:1}];
+  const FCOLS=[{k:CYP,cy:1},...(open27?MY.map(k=>({k,m:1})):[]),{k:CYY,calc:1,cy:1},{k:CYN,cy:1}];
   const nF=FCOLS.length;
   const colg=`<colgroup><col class="cd"><col span="9" class="c9">${FCOLS.map(c=>`<col class="${c.m?"cm":"cy"}">`).join("")}<col class="ctt"><col class="ccal"></colgroup>`;
   const head=`${colg}<thead>
     <tr class="grp"><th class="d" rowspan="2">Descripción</th><th colspan="9" class="g9">Estado de costos · 9 columnas</th><th colspan="${nF}" class="gf">Flujo mensual · kUS$</th><th rowspan="2" class="tt">Total CAPEX</th><th rowspan="2" class="tt">Calce</th></tr>
-    <tr class="sub">${CCOLS.map(c=>`<th class="${c.calc?"calc":""}" title="${esc(c.t)}"><small>${c.n}</small>${esc(c.h||c.t)}</th>`).join("")}${FCOLS.map(c=>c.k==="CY27"
-      ?`<th class="fy"><button class="ytog" data-ytog="2027" aria-expanded="${open27}" title="${open27?"Agrupar":"Ver meses de"} 2027">${open27?"◂":"▸"} CY27</button></th>`
+    <tr class="sub">${CCOLS.map(c=>`<th class="${c.calc?"calc":""}" title="${esc(c.t)}"><small>${c.n}</small>${esc(c.h||c.t)}</th>`).join("")}${FCOLS.map(c=>c.k===CYY
+      ?`<th class="fy"><button class="ytog" data-ytog="${YR}" aria-expanded="${open27}" title="${open27?"Agrupar":"Ver meses de"} ${YR}">${open27?"◂":"▸"} ${CYY}</button></th>`
       :`<th class="${c.m?"fm":"fy"} ${c.k===NOWK?"now":""}">${c.m?mLabel(c.k).toLowerCase()+"-"+c.k.slice(2,4):c.k}</th>`).join("")}</tr></thead>`;
   const rnd=v=>v==null||v===""?"":Math.round(Number(v)*10)/10;
   const inp=(v,attrs,ph,lab)=>`<td class="m"><input type="number" step="any" inputmode="decimal" value="${rnd(v)}" placeholder="${ph}" ${attrs} aria-label="${esc(lab)}"></td>`;
@@ -1128,7 +1436,7 @@ function renderCos(){
   /* celdas de flujo: get(k) devuelve el valor; edit(k) devuelve atributos del input o null si se calcula */
   const flowCells=(get,edit,raw,lab)=>FCOLS.map(c=>{
     const cls=`${c.m?"fm":"fy"} ${c.k===NOWK?"now":""}`;
-    if(c.k==="CY27"){const v=M27.reduce((s,m)=>s+get(m),0);return `<td class="${cls} c">${n0(v)}</td>`;}
+    if(c.k===CYY){const v=MY.reduce((s,m)=>s+get(m),0);return `<td class="${cls} c">${n0(v)}</td>`;}
     if(edit)return `<td class="m ${cls}"><input type="number" step="any" inputmode="decimal" value="${rnd(raw(c.k))}" placeholder="·" ${edit(c.k)} aria-label="${esc(lab)} ${c.k}"></td>`;
     return `<td class="${cls}">${n0(get(c.k))}</td>`;}).join("");
   const flowTot=get=>FKEYS.reduce((s,k)=>s+get(k),0);
@@ -1205,7 +1513,7 @@ function openItForm(id,line,parent){
   $("#itTitle").textContent=i?"Editar ítem":"Nuevo ítem de costo";$("#itOk").textContent=i?"Guardar":"Agregar";
   itf.line.value=i?i.line:(line||"con");fillParents(itf.line.value,i?i.parent:parent,id);
   itf.nombre.value=i?.nombre||"";itf.cant.value=i?.cant??"";itf.unid.value=i?.unidad||"";itf.ppto.value=i?.ppto??"";itf.meses.value=i?.meses??"";
-  itf.ini.innerHTML=`<option value="">${i?"No cambiar el flujo":"No distribuir (lo escribo a mano)"}</option>`+["CY26",...M27].map(k=>`<option value="${k}">${k==="CY26"?"2026 (CY26)":mLong(k)}</option>`).join("");
+  itf.ini.innerHTML=`<option value="">${i?"No cambiar el flujo":"No distribuir (lo escribo a mano)"}</option>`+[CYP,...MY].map(k=>`<option value="${k}">${k===CYP?(YR-1)+" ("+CYP+")":mLong(k)}</option>`).join("");
   setItKind(i?.group?"group":"item");$("#itErr").hidden=true;itf.bg.hidden=false;setTimeout(()=>itf.nombre.focus(),0);
 }
 const closeIt=()=>{itf.bg.hidden=true;itEdit=null;};
@@ -1213,8 +1521,8 @@ $("#itCancel").addEventListener("click",closeIt);
 itf.bg.addEventListener("mousedown",e=>{if(e.target===itf.bg)closeIt();});
 itf.bg.addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();closeIt();}});
 function spread(ppto,meses,start){const f={};if(!ppto||!meses||!start)return null;const per=ppto/meses;
-  if(start==="CY26"){f.CY26=ppto;return f;}
-  let idx=M27.indexOf(start);for(let m=0;m<meses;m++){const k=idx+m<M27.length?M27[idx+m]:"CY28";f[k]=(f[k]||0)+per;}
+  if(start===CYP){f[CYP]=ppto;return f;}
+  let idx=MY.indexOf(start);for(let m=0;m<meses;m++){const k=idx+m<MY.length?MY[idx+m]:CYN;f[k]=(f[k]||0)+per;}
   Object.keys(f).forEach(k=>f[k]=Math.round(f[k]*1000)/1000);return f;}
 $("#itForm").addEventListener("submit",e=>{e.preventDefault();
   const nombre=itf.nombre.value.trim();if(!nombre){$("#itErr").hidden=false;itf.nombre.focus();return;}
@@ -1251,8 +1559,8 @@ $("#cForm").addEventListener("submit",e=>{e.preventDefault();
   if(id0){saveCos(id0,data);toast("Reporte actualizado");return;}
   const p=projects.find(x=>x.nombre.toLowerCase()===nombre.toLowerCase());
   if(p){cosSel="p:"+p.id;renderCos();toast("Ese proyecto ya está en la lista");return;}
-  const full={...data,proyectoId:"",lines:{},items:[],orden:Date.now(),actualizado:now()},id=store.newId();
-  costos.push({id,...full});cosSel=id;try{localStorage.setItem("gpro-cos",id)}catch(_){}render();store.add("costos",id,full);toast("Reporte creado");
+  const full={...data,anio:YR,proyectoId:"",lines:{},items:[],orden:Date.now(),actualizado:now()},id=store.newId();
+  DB.costos.push({id,...full});cosSel=id;try{localStorage.setItem("gpro-cos",id)}catch(_){}render();store.add("costos",id,full);toast("Reporte creado");
 });
 
 /* ---------- exportar a Excel ---------- */
@@ -1331,8 +1639,8 @@ function cosSheets(){
   const sname=t=>{let b=("9C "+t).replace(/[\[\]:*?\/\\]/g," ").slice(0,31).trim(),x=b,i=2;while(used.has(x)){x=b.slice(0,28)+" "+i++;}used.add(x);return x;};
   return [...costos].sort((a,b)=>(a.orden||0)-(b.orden||0)).map(r=>{
     const rows=[[{v:`${r.nombre}${r.pep?" · "+r.pep:""} · ${perLabel(r.periodo)} · kUS$`,s:7}]];
-    rows.push([{v:"Descripción",s:1},{v:"Cantidad",s:1},{v:"Unidad",s:1},{v:"Meses",s:1},...CCOLS.map(c=>({v:`${c.n}. ${c.t}`,s:1})),{v:"CY26",s:1},...M27.map(k=>({v:mLong(k),s:1})),{v:"CY27",s:1},{v:"CY28",s:1},{v:"Total CAPEX",s:1},{v:"Calce",s:1}]);
-    const fl=(get,pp)=>{const ks=FKEYS.map(get),tot=ks.reduce((a,b)=>a+b,0);return [{v:+ks[0].toFixed(1),s:6},...M27.map((k,j)=>({v:+ks[j+1].toFixed(1),s:6})),{v:+M27.reduce((s,k)=>s+get(k),0).toFixed(1),s:6},{v:+ks[ks.length-1].toFixed(1),s:6},{v:+tot.toFixed(1),s:6},{v:+(pp-tot).toFixed(1),s:6}];};
+    rows.push([{v:"Descripción",s:1},{v:"Cantidad",s:1},{v:"Unidad",s:1},{v:"Meses",s:1},...CCOLS.map(c=>({v:`${c.n}. ${c.t}`,s:1})),{v:CYP,s:1},...MY.map(k=>({v:mLong(k),s:1})),{v:CYY,s:1},{v:CYN,s:1},{v:"Total CAPEX",s:1},{v:"Calce",s:1}]);
+    const fl=(get,pp)=>{const ks=FKEYS.map(get),tot=ks.reduce((a,b)=>a+b,0);return [{v:+ks[0].toFixed(1),s:6},...MY.map((k,j)=>({v:+ks[j+1].toFixed(1),s:6})),{v:+MY.reduce((s,k)=>s+get(k),0).toFixed(1),s:6},{v:+ks[ks.length-1].toFixed(1),s:6},{v:+tot.toFixed(1),s:6},{v:+(pp-tot).toFixed(1),s:6}];};
     const line=(lab,f,st,get,i)=>[{v:lab,s:st},i&&i.cant?i.cant:"",i?i.unidad||"":"",i&&i.meses?i.meses:"",...CCOLS.map(c=>({v:+f(c.k).toFixed(1),s:6})),...(get?fl(get,f("apr")):[])];
     const itemsRec=(line_,parent,depth,out,fn)=>itemsOf(r,line_,parent).forEach(i=>{out.push(fn(i,depth));if(i.group)itemsRec(line_,i.id,depth+1,out,fn);});
     const add9=l=>{rows.push(line(l.t,c=>cval(r,l.k,c),7,k=>lflow(r,l.k,k)));itemsRec(l.k,null,1,rows,(i,d)=>line(" ".repeat(d*3)+i.nombre,c=>ival(r,i,c),i.group?7:0,k=>iflow(r,i,k),i.group?null:i));};
@@ -1342,24 +1650,24 @@ function cosSheets(){
     rows.push(line("Contingencia",c=>csum(r,CCONT,c),7,sl(CCONT)));
     CCONT.forEach(add9);
     rows.push(line("Total "+r.nombre,c=>csum(r,CALL,c),7,sl(CALL)));
-    return {name:sname(r.nombre),rows,cols:[46,11,7,7,...CCOLS.map(()=>14),10,...M27.map(()=>10),11,11,12,10],freeze:[1,2],headerHeight:42};
+    return {name:sname(r.nombre),rows,cols:[46,11,7,7,...CCOLS.map(()=>14),10,...MY.map(()=>10),11,11,12,10],freeze:[1,2],headerHeight:42};
   });
 }
 function buildWorkbook(){
   const SS={ok:2,run:3,pin:4,pend:5};
   // Hoja 1: proyectos
-  const head=["Proyecto","Descripción","Fase","Tipo","Jefe de Ingeniería","Jefe Ejecutor","PEP","PPTO 2027 (kUS$)","CB 2027 (kUS$)","N° iniciativas",...STAGES.map(s=>s.t),"Hitos ADS","Avance (%)","Faltan","Próximo"];
+  const head=["Proyecto","Descripción","Fase","Tipo","Categoría","Jefe de Ingeniería","Jefe Ejecutor","PEP",`PPTO ${YR} (kUS$)`,`CB ${YR} (kUS$)`,"N° iniciativas",...STAGES.map(s=>s.t),"Hitos ADS","Avance (%)","Faltan","Próximo"];
   const rows=[head.map(h=>({v:h,s:1}))];
   projects.forEach(p=>{
     const pr=progress(p),e=p.etapas||{},k=kidsOf(p);
-    rows.push([{v:p.nombre,s:7},p.desc||"",p.fase||"Por definir",p.tipo||"Sin tipo",p.jefeIng||"",p.jefeEje||"",p.pep||"",{v:pMonto(p),s:6},{v:pCB(p)??"",s:6},k.length,
+    rows.push([{v:p.nombre,s:7},p.desc||"",p.fase||"Por definir",p.tipo||"Sin tipo",catOf(p)||"Sin categoría",p.jefeIng||"",p.jefeEje||"",p.pep||"",{v:pMonto(p),s:6},{v:pCB(p)??"",s:6},k.length,
       ...STAGES.map(s=>k.length?{v:"Ver iniciativas",s:5}:{v:STATE_TXT[e[s.k]||"pend"],s:SS[e[s.k]||"pend"]}),
       {v:gatesOf(p).map(g=>`${g.t}: ${STATE_TXT[g.v]}`).join("\n")||"—",s:8},
       Math.round(pr.pct*100),pr.falta,pr.next?pr.next.t:"Cerrado"]);
   });
   // Hoja 2: iniciativas (cada celda de etapa lleva el nombre de la etapa y el color de su estado)
   const maxN=Math.max(...Object.values(KINDS).map(k=>k.stages.length));
-  const ih=["Proyecto","Iniciativa","Tipo de seguimiento","PPTO 2027 (kUS$)","CB 2027 (kUS$)","Empresa / proveedor","N° OC / contrato","Responsable","Inicio","Término",...Array.from({length:maxN},(_,n)=>`Etapa ${n+1}`),"Avance (%)","Faltan","Próximo"];
+  const ih=["Proyecto","Iniciativa","Tipo de seguimiento",`PPTO ${YR} (kUS$)`,`CB ${YR} (kUS$)`,"Empresa / proveedor","N° OC / contrato","Responsable","Inicio","Término",...Array.from({length:maxN},(_,n)=>`Etapa ${n+1}`),"Avance (%)","Faltan","Próximo"];
   const irows=[ih.map(h=>({v:h,s:1}))];
   projects.forEach(p=>kidsOf(p).forEach(i=>{
     const K=KINDS[i.kind]||KINDS.ing,pr=iniProg(i),e=i.etapas||{};
@@ -1375,31 +1683,45 @@ function buildWorkbook(){
     res.push([{v:lab,s:7},a.length,{v:+sp.toFixed(1),s:6},{v:+sa.toFixed(1),s:6},{v:+(sp+sa).toFixed(1),s:6},
       a.length?Math.round(a.reduce((s,p)=>s+progress(p).pct,0)/a.length*100):0,a.reduce((s,p)=>s+progress(p).falta,0)]);
   });
-  if(ajustes.length){res.push([],[{v:"Ajustes de cartera",s:1},{v:"Tipo",s:1},{v:"PPTO 2027 (kUS$)",s:1}]);
+  if(ajustes.length){res.push([],[{v:"Ajustes de cartera",s:1},{v:"Tipo",s:1},{v:`PPTO ${YR} (kUS$)`,s:1}]);
     ajustes.forEach(a=>res.push([a.nombre+(a.desc?" · "+a.desc:""),a.tipo||"",{v:num(a.monto),s:6}]));}
   res.push([],["Generado",new Date().toLocaleString("es-CL")]);
   // Hoja 4: flujos (plan mensual)
-  const fh=["Proyecto","Iniciativa","PPTO 2027 (kUS$)",...MESES.map(mLong),"Total 2027","Dif. vs PPTO"];
+  const fh=["Proyecto","Iniciativa",`PPTO ${YR} (kUS$)`,...MESES.map(mLong),`Total ${YR}`,"Dif. vs PPTO"];
   const frows=[fh.map(h=>({v:h,s:1}))];
-  partidas().filter(x=>!x.head).forEach(x=>{const t=sumKeys(x.o,M27);
+  partidas().filter(x=>!x.head).forEach(x=>{const t=sumKeys(x.o,MY);
     frows.push([x.p.nombre,x.solo?"—":x.nombre,{v:x.ppto,s:6},...MESES.map(k=>{const v=planOf(x.o)[k];return {v:v==null||v===""?"":num(v),s:6};}),{v:+t.toFixed(1),s:6},{v:+(t-x.ppto).toFixed(1),s:6}]);});
-  const mt=monthTotals(),t27=M27.reduce((s,k)=>s+mt[MESES.indexOf(k)],0),pp=partidas().filter(x=>!x.head).reduce((s,x)=>s+x.ppto,0);
+  const mt=monthTotals(),t27=MY.reduce((s,k)=>s+mt[MESES.indexOf(k)],0),pp=partidas().filter(x=>!x.head).reduce((s,x)=>s+x.ppto,0);
   frows.push([{v:"Total cartera",s:7},"",{v:pp,s:6},...mt.map(v=>({v:+v.toFixed(1),s:6})),{v:+t27.toFixed(1),s:6},{v:+(t27-pp).toFixed(1),s:6}]);
   return XW.build([
-    {name:"Proyectos",rows,cols:[22,40,10,8,18,16,14,14,14,11,...STAGES.map(()=>14),40,10,8,30],filter:true,freeze:[1,1],headerHeight:42},
+    {name:"Proyectos",rows,cols:[22,40,10,8,14,18,16,14,14,14,11,...STAGES.map(()=>14),40,10,8,30],filter:true,freeze:[1,1],headerHeight:42},
     {name:"Iniciativas",rows:irows,cols:[20,36,20,14,14,22,16,18,10,10,...Array.from({length:maxN},()=>18),10,8,26],filter:true,freeze:[2,1],headerHeight:30},
     {name:"Resumen",rows:res,cols:[46,11,20,16,18,20,22]},
     {name:"Flujos plan",rows:frows,cols:[20,34,12,...MESES.map(()=>10),12,12],freeze:[3,1],headerHeight:20},
+    finCompSheet(),
+    ...cumSheets(),
     ...cosSheets()
   ]);
 }
-const xlsName=()=>"Control_Entregables_GPRO_"+new Date().toISOString().slice(0,10)+".xlsx";
+function finCompSheet(){
+  LR=calcLR();
+  const H=["Proyecto","Iniciativa",`PPTO ${YR}`,`Plan ${YR}`,"Forecast 9+3",`Real a ${LR?mLong(LR):"—"}`,"Proyección resto",`Cierre estimado ${YR}`,"Dif. cierre vs PPTO","Dif. cierre vs 9+3",...MESES.map(k=>mLong(k)+(LR&&k<=LR?" (R)":" (P)"))];
+  const r=[H.map(h=>({v:h,s:1}))],N=v=>({v:+v.toFixed(1),s:6});
+  partidas().filter(x=>!x.head).forEach(x=>{const pl=serSum(x.o,MY,"plan"),f=serSum(x.o,MY,"f93"),cl=serSum(x.o,MY,"rp"),ra=LR?serSum(x.o,MY.filter(k=>k<=LR),"rp"):0;
+    r.push([x.p.nombre,x.solo?"—":x.nombre,N(x.ppto),N(pl),N(f),N(ra),N(cl-ra),N(cl),N(cl-x.ppto),N(cl-f),...MESES.map(k=>N(serVal(x.o,k,"rp")))]);});
+  return {name:"Flujos comparativo",rows:r,cols:[20,34,11,11,11,12,12,13,12,12,...MESES.map(()=>11)],filter:true,freeze:[2,1],headerHeight:42};
+}
+const xlsName=()=>"Control_Avance_Proyectos_GPRO_"+YR+"_"+new Date().toISOString().slice(0,10)+".xlsx";
 
 /* ---------- formulario de proyecto ---------- */
 let editId=null;
 const fm={bg:$("#modal"),form:$("#pForm"),nombre:$("#fmNombre"),fase:$("#fmFase"),pep:$("#fmPep"),monto:$("#fmMonto"),ji:$("#fmJi"),je:$("#fmJe"),desc:$("#fmDesc"),err:$("#fmErr")};
 fm.fase.innerHTML=FASES.map(f=>`<option value="${f}">${f}</option>`).join("")+'<option value="">Por definir</option>';
-let fmTipo="";
+let fmTipo="",fmKind="ing",fmCat="";
+function setFmCat(v){fmCat=v;document.querySelectorAll("#fmCat button").forEach(b=>{const on=b.dataset.v===v;b.classList.toggle("on",on);b.setAttribute("aria-checked",String(on));});}
+$("#fmCat").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;setFmCat(fmCat===b.dataset.v?"":b.dataset.v);if(!editId)setFmKind(fmCat==="Construcción"?"con":"ing");});
+function setFmKind(v){fmKind=v;document.querySelectorAll("#fmKind button").forEach(b=>{const on=b.dataset.v===v;b.classList.toggle("on",on);b.setAttribute("aria-checked",String(on));});}
+$("#fmKind").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setFmKind(b.dataset.v);});
 function setTipo(v){fmTipo=v;document.querySelectorAll("#fmTipo button").forEach(b=>{const on=b.dataset.v===v;b.classList.toggle("on",on);b.setAttribute("aria-checked",String(on));});}
 $("#fmTipo").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setTipo(fmTipo===b.dataset.v?"":b.dataset.v);});
 function fillPeople(){
@@ -1413,7 +1735,7 @@ function openForm(id){
   editId=id||null;const p=id?projects.find(x=>x.id===id):null,hasK=p&&kidsOf(p).length>0;
   $("#mTitle").textContent=p?"Editar proyecto":"Nuevo proyecto";$("#fmOk").textContent=p?"Guardar":"Agregar";
   fm.nombre.value=p?.nombre||"";fm.fase.value=p?(p.fase||""):"PFS";fm.pep.value=p?.pep||"";
-  fm.monto.value=p?.monto??"";$("#fmMontoHint").hidden=!hasK;
+  fm.monto.value=p?.monto??"";$("#fmKindFld").hidden=!!p;setFmCat(p?catOf(p):"");setFmKind(fmCat==="Construcción"?"con":"ing");$("#fmMontoHint").hidden=!hasK;
   fm.ji.value=p?.jefeIng||"";fm.je.value=p?.jefeEje||"";fm.desc.value=p?.desc||"";setTipo(p?.tipo||"");
   fm.err.hidden=true;fm.nombre.classList.remove("bad");fillPeople();
   fm.bg.hidden=false;closePop();setTimeout(()=>fm.nombre.focus(),0);
@@ -1427,11 +1749,11 @@ fm.form.addEventListener("submit",e=>{
   e.preventDefault();
   const nombre=fm.nombre.value.trim();
   if(!nombre){fm.err.hidden=false;fm.nombre.classList.add("bad");fm.nombre.focus();return;}
-  const data={nombre,fase:fm.fase.value,pep:fm.pep.value.trim(),tipo:fmTipo,jefeIng:fm.ji.value.trim(),jefeEje:fm.je.value.trim(),desc:fm.desc.value.trim()};
+  const data={nombre,fase:fm.fase.value,pep:fm.pep.value.trim(),tipo:fmTipo,categoria:fmCat,jefeIng:fm.ji.value.trim(),jefeEje:fm.je.value.trim(),desc:fm.desc.value.trim()};
   {const m=fm.monto.value;data.monto=m===""?null:Number(m);}
   const id=editId;closeForm();
   if(id){save(id,data);toast("Proyecto actualizado");}
-  else{createProject(data);toast("Proyecto agregado");}
+  else{createProject(data,fmKind);toast("Proyecto agregado con su primera iniciativa");}
 });
 
 /* ---------- formulario de iniciativa ---------- */
@@ -1447,7 +1769,7 @@ function openIniForm(id,pid){
   fi.p.innerHTML='<option value="">Elige un proyecto…</option>'+projects.map(p=>`<option value="${p.id}">${esc(p.nombre)}</option>`).join("");
   fi.p.value=i?i.proyectoId:(pid||"");
   fi.nombre.value=i?.nombre||"";fi.ppto.value=i?.ppto??"";fi.cb.value=i?.cb??"";fi.prov.value=i?.proveedor||"";fi.oc.value=i?.oc||"";
-  fi.resp.value=i?.responsable||"";fi.ini.value=i?.inicio||"";fi.fin.value=i?.termino||"";setKind(i?.kind||"ing");
+  fi.resp.value=i?.responsable||"";fi.ini.value=i?.inicio||"";fi.fin.value=i?.termino||"";setKind(i?.kind||(catOf(projects.find(x=>x.id===pid)||{})==="Construcción"?"con":"ing"));
   fi.err.hidden=true;fi.nombre.classList.remove("bad");fi.p.classList.remove("bad");fillPeople();
   fi.bg.hidden=false;closePop();setTimeout(()=>(fi.p.value?fi.nombre:fi.p).focus(),0);
 }
@@ -1468,6 +1790,278 @@ fi.form.addEventListener("submit",e=>{
   else{createIni(data);toast("Iniciativa agregada");}
 });
 
+/* ---------- selector de cartera (año) ---------- */
+function yearLabels(){
+  document.querySelectorAll("[data-yr]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.yr===YR)));
+  document.querySelectorAll(".yrT").forEach(e=>e.textContent=YR);document.querySelectorAll(".cyT").forEach(e=>e.textContent=CYY);document.querySelectorAll(".cynT").forEach(e=>e.textContent=CYN);document.querySelectorAll(".decT").forEach(e=>e.textContent="dic-"+String(YR).slice(2));
+  const r=$("#finRange");if(r)r.textContent=mLong(MESES[0]).toLowerCase()+" a "+mLong(MESES[MESES.length-1]).toLowerCase();
+  const c=$("#calceTxt");if(c)c.textContent=CYP+" + meses "+YR+" + "+CYN;
+}
+function setYear(y){if(y===YR)return;YR=y;try{localStorage.setItem("gpro-anio",String(y))}catch(e){}
+  setYearVars();ui.confirm=null;cosSel=null;renderHead();yearLabels();render();toast("Cartera "+y);}
+document.querySelectorAll("[data-yr]").forEach(b=>b.addEventListener("click",()=>setYear(+b.dataset.yr)));
+yearLabels();
+
+/* ---------- zoom de la página (por persona, se guarda en este navegador) ---------- */
+const ZLV=[60,70,80,90,100,110,125,150];let ZOOM=1;
+function setZoom(p){p=ZLV.includes(p)?p:100;ZOOM=p/100;const w=document.querySelector(".wrap");if(w)w.style.zoom=p===100?"":String(ZOOM);
+  $("#zVal").textContent=p+"%";$("#zOut").disabled=p===ZLV[0];$("#zIn").disabled=p===ZLV[ZLV.length-1];try{localStorage.setItem("gpro-zoom",String(p))}catch(e){}}
+const zCur=()=>Math.round(ZOOM*100);
+$("#zOut").addEventListener("click",()=>setZoom(ZLV[Math.max(0,ZLV.indexOf(zCur())-1)]));
+$("#zIn").addEventListener("click",()=>setZoom(ZLV[Math.min(ZLV.length-1,ZLV.indexOf(zCur())+1)]));
+$("#zVal").addEventListener("click",()=>setZoom(100));
+{let z=100;try{z=+localStorage.getItem("gpro-zoom")||100}catch(e){}setZoom(z);}
+
+/* ---------- valor ganado (EVM): CPI y desviación vs plan ----------
+   BAC = PPTO de la partida · PV = plan acumulado al último mes con real · AC = real acumulado
+   EV = % de avance físico (etapas) × BAC · CPI = EV/AC · SPI = EV/PV · CV = EV−AC · EAC = BAC/CPI */
+const cpiCls=v=>v==null?"":v>=1?"n-ok":v>=0.9?"n-warn":"n-red";
+/* por proyecto: PV y AC suman sus partidas; avance físico = % informado (p.fis) o, si no hay, el de las etapas */
+/* mes de análisis del CPI: el que se elija en la curva (hasta el último mes con real) */
+let evmM=null,finFY=false;const EM=()=>evmM&&LR&&evmM<=LR?evmM:LR;
+/* avance de etapas a una fecha: etapas completadas con fecha real hasta fin de ese mes (sin fecha real: cuentan desde el último cierre) */
+function stageAt(p,m){
+  const k=kidsOf(p);if(!k.length)return progress(p).pct;const end=m+"-31";
+  const ps=k.map(i=>{const st=(KINDS[i.kind]||KINDS.ing).stages,e=i.etapas||{},re=i.real||{};
+    const n=st.filter(s=>e[s.k]==="ok"&&(re[s.k]?re[s.k]<=end:m>=LR)).length;return {pct:n/st.length,w:Math.max(0,num(i.ppto))};});
+  const tw=ps.reduce((s,x)=>s+x.w,0);return tw>0?ps.reduce((s,x)=>s+x.pct*x.w,0)/tw:ps.reduce((s,x)=>s+x.pct,0)/ps.length;
+}
+/* % físico informado por mes (fism{mes}); vale el último informado hasta ese mes; si no hay, el de etapas */
+function fisAt(p,m){
+  const fm=p.fism||{},ks=Object.keys(fm).filter(k=>k<=m&&has(fm[k])).sort();
+  if(ks.length)return {v:num(fm[ks[ks.length-1]])/100,src:ks[ks.length-1]===m?"mes":"arrastre"};
+  if(has(p.fis)&&LR&&m>=LR)return {v:num(p.fis)/100,src:"mes"};
+  return {v:stageAt(p,m),src:"etapas"};
+}
+function evmRows(m){
+  if(!LR)return [];m=m||EM();const ks=MESES.filter(k=>k<=m),by=new Map();
+  partidas().filter(x=>!x.head).forEach(x=>{let g=by.get(x.p.id);if(!g){g={p:x.p,bac:0,pv:0,ac:0};by.set(x.p.id,g);}
+    /* BAC = PPTO; si la partida no estaba en el presupuesto (PPTO 0), se usa su monto 9+3 */
+    const f=serSum(x.o,MY,"f93");if(!x.ppto&&f)g.bacF=true;g.bac+=x.ppto||f;g.pv+=ks.reduce((s,k)=>s+num(planOf(x.o)[k]),0);g.ac+=ks.reduce((s,k)=>s+num((x.o.realm||{})[k]),0);});
+  return [...by.values()].map(g=>{const f=fisAt(g.p,m);return {...g,pct:f.v,src:f.src,ev:f.v*g.bac};});
+}
+function evmAgg(rows){
+  if(!rows.length)return null;const S=f=>rows.reduce((s,r)=>s+r[f],0);
+  const bac=S("bac"),pv=S("pv"),ac=S("ac"),ev=S("ev");
+  const gap=rows.some(r=>r.ac>0&&!(r.ev>0));
+  return {bac,pv,ac,ev,pct:bac?ev/bac:0,cpi:ac>0&&ev>0?ev/ac:null,spi:pv>0&&ev>0?ev/pv:null,cv:ev-ac,dv:ac-pv,eac:!gap&&ac>0&&ev>0?bac/(ev/ac):null,gap};
+}
+const evmTot=m=>evmAgg(evmRows(m));
+function renderEvm(){
+  const box=$("#evmBox");if(!box)return;
+  const rows=evmRows();
+  if(!rows.length){box.innerHTML=`<div class="cempty">El CPI se calcula cuando hay meses cerrados como real (vista Real + proyección).</div>`;$("#evmSub").textContent="";return;}
+  const T=evmAgg(rows),f2=v=>v==null?"—":v.toFixed(2),pc=v=>Math.round(v*100)+"%";
+  const sg=v=>{const d=+v.toFixed(1);return `<span class="${d>0?"up":d<0?"dn":""}">${d>0?"+":""}${fmt(d)}</span>`;};
+  const m=EM();$("#evmSub").innerHTML=`a <b>${mLong(m).toLowerCase()}</b>${m!==LR?` · <button type="button" class="lnk" id="evmReset">volver a ${mLong(LR).toLowerCase()}</button>`:""} · escribe el % de avance físico informado a ese mes (vacío = avance por etapas) · CPI = EV ÷ AC`;
+  const line=(nm,a,cls,p)=>`<tr class="${cls||""}"><td class="nm" title="${esc(nm)}">${esc(nm)}</td><td>${fmt(a.bac)}</td><td>${p?`${(()=>{const m=EM(),own=(p.fism||{})[m],fb=fisAt({...p,fism:Object.fromEntries(Object.entries(p.fism||{}).filter(([k])=>k!==m))},m);
+      const val=has(own)?own:(m>=LR&&has(p.fis)&&!Object.keys(p.fism||{}).length?p.fis:"");
+      return `<span class="fisin"><input type="number" min="0" max="100" step="1" data-fis="${p.id}" value="${val}" placeholder="${Math.round(fb.v*100)}" title="% de avance físico a ${mLong(m)}. Vacío = ${fb.src==="etapas"?"avance por etapas":"último % informado"} (${Math.round(fb.v*100)}%)" aria-label="Avance físico ${esc(nm)}">%</span>`;})()}`:pc(a.pct)}</td><td>${fmt(a.pv)}</td><td>${fmt(a.ev)}</td><td>${fmt(a.ac)}</td><td>${sg(a.dv)}</td><td>${sg(-a.cv).replace(/>([+-]?)/,(m,x)=>">"+(x==="+"?"-":x==="-"?"+":""))}</td>
+    <td class="${cpiCls(a.cpi)}"><b>${f2(a.cpi)}</b></td><td class="${cpiCls(a.spi)}">${f2(a.spi)}</td><td>${a.eac==null?"—":fmt(a.eac)}</td></tr>`;
+  let h=`<table class="evmt"><thead><tr><th class="nm">Proyecto</th><th title="Presupuesto (Budget at Completion)">PPTO (BAC)</th><th title="% informado; vacío = avance por etapas">Avance físico</th><th title="Valor planificado: plan acumulado a la fecha">PV plan</th><th title="Valor ganado: avance físico × PPTO">EV ganado</th><th title="Costo real acumulado">AC real</th><th title="Real − plan a la fecha (positivo = gastó más que lo planificado)">Desv. vs plan</th><th title="Variación de costo: EV − AC (negativo = sobrecosto)">CV</th><th title="EV ÷ AC: &lt;1 gasta más de lo que avanza">CPI</th><th title="EV ÷ PV: &lt;1 avanza menos de lo planificado">SPI</th><th title="Estimado al término: PPTO ÷ CPI">EAC</th></tr></thead><tbody>`;
+  rows.forEach(r=>{h+=line(r.p.nombre+(r.bacF?" *":""),evmAgg([r]),"",r.p);});
+  h+=line("Total cartera filtrada",T,"ftot")+`</tbody></table>`;
+  if(rows.some(r=>r.bacF))h+=`<p class="adjnote" style="margin:6px 0 0">* Iniciativas que no estaban en el presupuesto: su PPTO (BAC) para el CPI es el monto del 9+3.</p>`;
+  if(T.gap)h+=`<p class="adjnote" style="margin:6px 0 0;color:var(--red)">Hay proyectos con gasto real y sin avance físico informado: el CPI total queda subestimado hasta completar su %.</p>`;
+  box.innerHTML=h;
+}
+
+/* franja de CPI acumulado por mes (hasta el último mes con real) */
+function renderCpiStrip(){
+  const el=$("#cpiStrip");if(!el)return;
+  if(!LR){el.innerHTML="";return;}const ms=MESES.filter(k=>k<=LR),cur=EM();
+  el.innerHTML=`<span class="cl">CPI acumulado</span>`+ms.map(k=>{const e=evmTot(k),v=e&&e.cpi;
+    return `<button type="button" data-cm="${k}" class="${k===cur?"on":""}" aria-pressed="${k===cur}" title="CPI acumulado a ${mLong(k)}${e?` · EV ${fmt(e.ev)} ÷ AC ${fmt(e.ac)}`:""}"><small>${mLabel(k)}</small><b class="${cpiCls(v)}">${v==null?"—":v.toFixed(2)}</b></button>`;}).join("");
+}
+
+/* ---------- línea base por etapa, forecast semanal y cumplimiento ----------
+   Iniciativa: lb{etapa:fecha término LB} · fc{etapa:fecha forecast} · real{etapa:fecha real}
+   Proyecto:   lbRev{n,fecha,motivo,estado:"congelada"|"revision"} · lbHist[{n,fecha,motivo,lb:{iniId:{...}}}]
+               semanas[{corte,plan,real,spi,venc,at,atraso,rev}]  (foto de cada cierre semanal) */
+const isoLocal=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const hoy=()=>isoLocal(new Date());
+const ddiff=(a,b)=>Math.round((new Date(a+"T12:00")-new Date(b+"T12:00"))/864e5);   // a − b en días
+const dm=d=>d?d.slice(8,10)+"-"+d.slice(5,7):"";
+const stagesOf=i=>(KINDS[i.kind]||KINDS.ing).stages;
+const lbState=p=>p.lbRev?(p.lbRev.estado||"congelada"):"borrador";
+const lbLocked=p=>lbState(p)==="congelada";
+const pctTxt=v=>v==null?"—":Math.round(v*100)+"%";
+
+function iniCum(i,d){
+  const st=stagesOf(i),e=i.etapas||{},lb=i.lb||{},fc=i.fc||{},re=i.real||{};
+  const withLb=st.filter(s=>lb[s.k]);if(!withLb.length)return null;
+  const venc=withLb.filter(s=>lb[s.k]<=d);
+  const at=venc.filter(s=>e[s.k]==="ok"&&(!re[s.k]||re[s.k]<=lb[s.k])).length;
+  const endLb=withLb.map(s=>lb[s.k]).sort().pop();
+  /* forecast en cascada: el atraso de una etapa empuja a las siguientes que no tienen forecast propio */
+  const add=(x,n)=>{const t=new Date(x+"T12:00");t.setDate(t.getDate()+n);return isoLocal(t);};
+  let slip=0,endFc=null;
+  st.forEach(s=>{const L=lb[s.k];let p;
+    if(e[s.k]==="ok")p=re[s.k]||L||null;
+    else{p=fc[s.k]||(L?add(L,slip):null);if(p&&p<d)p=d;}
+    if(p&&L)slip=Math.max(slip,ddiff(p,L));if(p&&(!endFc||p>endFc))endFc=p;});
+  endFc=endFc||endLb;
+  return {plan:venc.length/st.length,real:iniProg(i).pct,venc:venc.length,at,endLb,endFc,lbN:withLb.length,total:st.length};
+}
+function cumOf(p,d=hoy()){
+  const k=kidsOf(p).map(i=>({i,c:iniCum(i,d),w:Math.max(0,num(i.ppto))})).filter(x=>x.c);
+  if(!k.length)return null;
+  const tw=k.reduce((s,x)=>s+x.w,0),wt=x=>tw>0?x.w/tw:1/k.length;
+  const plan=k.reduce((s,x)=>s+x.c.plan*wt(x),0),real=k.reduce((s,x)=>s+x.c.real*wt(x),0);
+  const venc=k.reduce((s,x)=>s+x.c.venc,0),at=k.reduce((s,x)=>s+x.c.at,0);
+  const endLb=k.map(x=>x.c.endLb).sort().pop(),endFc=k.map(x=>x.c.endFc).sort().pop();
+  const lbN=k.reduce((s,x)=>s+x.c.lbN,0),total=kidsOf(p).reduce((s,i)=>s+stagesOf(i).length,0);
+  return {plan,real,spi:plan>0?real/plan:null,venc,at,endLb,endFc,atraso:ddiff(endFc,endLb),lbN,total};
+}
+function semOf(c){
+  if(!c)return "na";const h=c.venc?c.at/c.venc:1;
+  if((c.spi!=null&&c.spi<0.85)||h<0.7||c.atraso>30)return "bad";
+  if((c.spi==null||c.spi>=0.95)&&h>=0.9&&c.atraso<=0)return "ok";
+  return "warn";
+}
+const SEMTXT={ok:"En plazo",warn:"Con desvío",bad:"Atrasado",na:"Sin LB"};
+const revTxt=p=>{const s=lbState(p);return s==="borrador"?"LB borrador":s==="revision"?`LB Rev.${p.lbRev.n} en revisión`:`LB Rev.${p.lbRev.n}`;};
+const atrTxt=a=>a>0?`+${a} d`:a<0?`${a} d`:"al día";
+
+/* insignia de cumplimiento en la fila del proyecto */
+function lbBadge(p){
+  const c=cumOf(p);
+  if(!c&&lbState(p)==="borrador")return `<button class="lbb none" data-lb="${p.id}" title="Definir la línea base de las etapas">＋ Línea base</button>`;
+  const s=semOf(c);
+  return `<button class="lbb ${s}" data-lb="${p.id}" title="${SEMTXT[s]} · ver línea base y cumplimiento"><span class="sdot"></span><span><b>${revTxt(p)}</b>${c?` · ${atrTxt(c.atraso)}<small>plan ${pctTxt(c.plan)} · real ${pctTxt(c.real)}</small>`:""}</span></button>`;
+}
+$("#rows").addEventListener("click",e=>{const b=e.target.closest("[data-lb]");if(b){e.stopPropagation();openLb(b.dataset.lb);}},true);
+
+/* ---------- modal de línea base ---------- */
+let lbId=null,lbWarn=false,lbAsk=false;
+function openLb(id){lbId=id;lbWarn=false;lbAsk=false;renderLb();$("#lbModal").hidden=false;}
+const closeLb=()=>{$("#lbModal").hidden=true;lbId=null;};
+function renderLb(){
+  const p=projects.find(x=>x.id===lbId);if(!p){closeLb();return;}
+  const st=lbState(p),locked=lbLocked(p),c=cumOf(p),k=kidsOf(p),d=hoy();
+  $("#lbTitle").textContent="Línea base · "+p.nombre;
+  const miss=k.reduce((s,i)=>s+stagesOf(i).filter(x=>!(i.lb||{})[x.k]).length,0);
+  let act="";
+  if(st==="borrador"||st==="revision"){
+    const lab=st==="borrador"?"Congelar línea base":`Congelar Rev.${p.lbRev.n}`;
+    act=`${lbWarn&&miss?`<span class="lbwarn">Faltan ${miss} etapa${miss===1?"":"s"} sin fecha LB.</span>`:""}
+      ${st==="revision"?`<button class="btn-ghost sm" id="lbCancelRev">Descartar revisión</button>`:""}
+      <button class="btn-add" id="lbFreeze">${lbWarn&&miss?"Congelar igual":lab}</button>`;
+  }else if(lbAsk){
+    act=`<input id="lbMotivo" type="text" placeholder="Motivo de la revisión (obligatorio)" aria-label="Motivo de la revisión"><button class="btn-ghost sm" id="lbAskNo">Cancelar</button><button class="btn-add" id="lbOpenRev">Abrir Rev.${p.lbRev.n+1}</button>`;
+  }else act=`<button class="btn-ghost sm" id="lbAsk">Nueva revisión de LB</button>`;
+  const stTxt=st==="borrador"?`<b>Borrador</b> · define la fecha de término comprometida de cada etapa y congélala. Luego no se podrá mover.`
+    :st==="revision"?`<b>Rev.${p.lbRev.n} en revisión</b> · ${esc(p.lbRev.motivo)} · ajusta las fechas LB y vuelve a congelar.`
+    :`<b>Congelada Rev.${p.lbRev.n}</b> · ${fdate(p.lbRev.fecha)}${p.lbRev.n?` · ${esc(p.lbRev.motivo)}`:""} · las fechas LB no se pueden modificar.`;
+  $("#lbHead").innerHTML=`<div class="lbst ${st}">${stTxt}</div>
+    ${c?`<div class="lbk"><span>Avance plan <b>${pctTxt(c.plan)}</b></span><span>Real <b>${pctTxt(c.real)}</b></span><span>SPI <b>${c.spi==null?"—":c.spi.toFixed(2)}</b></span><span>Hitos a tiempo <b>${c.at}/${c.venc}</b></span><span>Término LB <b>${fdate(c.endLb)}</b></span><span>Forecast <b class="${c.atraso>0?"neg":""}">${fdate(c.endFc)} (${atrTxt(c.atraso)})</b></span><span class="lbsem ${semOf(c)}"><i></i>${SEMTXT[semOf(c)]}</span></div>`:""}
+    <div class="lbact">${act}</div>`;
+  const ST={pend:"Pendiente",run:"En curso",pin:"Foco",ok:"Completada"};
+  let rows=`<thead><tr><th>Etapa</th><th>Estado</th><th>Término LB</th><th>Forecast</th><th>Real</th><th class="num">Desv.</th></tr></thead><tbody>`;
+  k.forEach(i=>{const K=KINDS[i.kind]||KINDS.ing,e=i.etapas||{},lb=i.lb||{},fc=i.fc||{},re=i.real||{};
+    rows+=`<tr class="lbi"><td colspan="6"><span class="kind ${i.kind}">${K.s}</span> <b>${esc(i.nombre)}</b>${i.inicio||i.termino?` <small>${fdate(i.inicio)||"…"} → ${fdate(i.termino)||"…"}</small>`:""}
+      ${!locked&&i.inicio&&i.termino?`<button class="btn-ghost sm" data-spread="${i.id}" title="Reparte las fechas LB en partes iguales entre inicio y término">Repartir LB entre inicio y término</button>`:""}</td></tr>`;
+    K.stages.forEach(s=>{const v=e[s.k]||"pend",L=lb[s.k]||"",F=fc[s.k]||"",R=re[s.k]||"";
+      const ref=v==="ok"?R:(F||(L&&L<d?d:""));const dv=L&&ref?ddiff(ref,L):null;
+      rows+=`<tr><td>${esc(s.t)}</td><td><span class="lbstate ${v}">${ST[v]}</span></td>
+        <td><input type="date" value="${L}" data-lbf="lb" data-ini="${i.id}" data-k="${s.k}" ${locked?"disabled":""} aria-label="Término LB ${esc(s.t)}"></td>
+        <td><input type="date" value="${F}" data-lbf="fc" data-ini="${i.id}" data-k="${s.k}" ${v==="ok"?"disabled":""} aria-label="Forecast ${esc(s.t)}"></td>
+        <td><input type="date" value="${R}" data-lbf="real" data-ini="${i.id}" data-k="${s.k}" ${v!=="ok"?"disabled title=\"Se completa al marcar la etapa como Completada\"":""} aria-label="Real ${esc(s.t)}"></td>
+        <td class="num ${dv>0?"neg":dv<0?"pos":""}">${dv==null?"—":dv>0?"+"+dv:dv}</td></tr>`;});
+  });
+  $("#lbTable").innerHTML=rows+"</tbody>";
+  const h=(p.lbHist||[]).slice().reverse();
+  $("#lbHist").innerHTML=(h.length?`<h4>Revisiones anteriores</h4><ul class="lbh">${h.map(x=>{const ends=Object.values(x.lb||{}).flatMap(o=>Object.values(o||{})).filter(Boolean).sort();return `<li><b>Rev.${x.n}</b> · ${fdate(x.fecha)} · ${esc(x.motivo||"")} · término ${fdate(ends.pop())||"—"}</li>`}).join("")}</ul>`:"")+
+    ((p.semanas||[]).length?`<h4>Cortes semanales</h4><table class="adjt lbw"><thead><tr><th>Corte</th><th>LB</th><th class="num">Plan</th><th class="num">Real</th><th class="num">SPI</th><th class="num">Hitos</th><th class="num">Atraso</th></tr></thead><tbody>${p.semanas.slice().reverse().map(w=>`<tr><td>${fdate(w.corte)}</td><td>Rev.${w.rev??0}</td><td class="num">${pctTxt(w.plan)}</td><td class="num">${pctTxt(w.real)}</td><td class="num">${w.spi==null?"—":w.spi.toFixed(2)}</td><td class="num">${w.at}/${w.venc}</td><td class="num ${w.atraso>0?"neg":""}">${atrTxt(w.atraso)}</td></tr>`).join("")}</tbody></table>`:"");
+}
+$("#lbClose").addEventListener("click",closeLb);
+$("#lbModal").addEventListener("mousedown",e=>{if(e.target===$("#lbModal"))closeLb();});
+$("#lbModal").addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();closeLb();}});
+$("#lbModal").addEventListener("change",e=>{const t=e.target.closest("[data-lbf]");if(!t)return;
+  const p=projects.find(x=>x.id===lbId);if(t.dataset.lbf==="lb"&&p&&lbLocked(p)){renderLb();return;}
+  saveIni(t.dataset.ini,{[t.dataset.lbf]:{[t.dataset.k]:t.value||""}});renderLb();});
+$("#lbModal").addEventListener("click",e=>{
+  const p=projects.find(x=>x.id===lbId);if(!p)return;const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.spread){const i=inis.find(x=>x.id===b.dataset.spread);if(!i||lbLocked(p))return;
+    const st=stagesOf(i),a=new Date(i.inicio+"T12:00"),z=new Date(i.termino+"T12:00"),span=(z-a)/st.length,lb={};
+    st.forEach((s,n)=>{lb[s.k]=isoLocal(new Date(a.getTime()+span*(n+1)));});saveIni(i.id,{lb});renderLb();toast("Fechas LB repartidas");return;}
+  if(b.id==="lbFreeze"){const miss=kidsOf(p).reduce((s,i)=>s+stagesOf(i).filter(x=>!(i.lb||{})[x.k]).length,0);
+    if(miss&&!lbWarn){lbWarn=true;renderLb();return;}
+    const n=p.lbRev?p.lbRev.n:0;save(p.id,{lbRev:{n,fecha:hoy(),motivo:p.lbRev?p.lbRev.motivo:"Línea base original",estado:"congelada"}});
+    lbWarn=false;renderLb();toast(`Línea base Rev.${n} congelada`);return;}
+  if(b.id==="lbAsk"){lbAsk=true;renderLb();setTimeout(()=>$("#lbMotivo")&&$("#lbMotivo").focus(),0);return;}
+  if(b.id==="lbAskNo"){lbAsk=false;renderLb();return;}
+  if(b.id==="lbOpenRev"){const m=$("#lbMotivo").value.trim();if(!m){$("#lbMotivo").classList.add("bad");$("#lbMotivo").focus();return;}
+    const snap={};kidsOf(p).forEach(i=>snap[i.id]={...(i.lb||{})});
+    save(p.id,{lbHist:[...(p.lbHist||[]),{n:p.lbRev.n,fecha:p.lbRev.fecha,motivo:p.lbRev.motivo,lb:snap}],lbRev:{n:p.lbRev.n+1,fecha:hoy(),motivo:m,estado:"revision"}});
+    lbAsk=false;renderLb();toast("Revisión abierta: ajusta las fechas LB");return;}
+  if(b.id==="lbCancelRev"){const h=(p.lbHist||[]).slice(),last=h.pop();if(!last)return;
+    kidsOf(p).forEach(i=>{const o=last.lb[i.id]||{},lb={};stagesOf(i).forEach(s=>lb[s.k]=o[s.k]||"");saveIni(i.id,{lb});});
+    save(p.id,{lbHist:h,lbRev:{n:last.n,fecha:last.fecha,motivo:last.motivo,estado:"congelada"}});renderLb();toast("Revisión descartada");}
+});
+
+/* ---------- pestaña Cumplimiento ---------- */
+function renderCum(){
+  if($("#tabCum").hidden)return;
+  const ps=projects.filter(fOk),d=hoy(),rows=ps.map(p=>({p,c:cumOf(p,d)}));
+  const withC=rows.filter(x=>x.c),frz=ps.filter(p=>lbState(p)!=="borrador").length;
+  const tw=withC.reduce((s,x)=>s+pMonto(x.p),0),w=x=>tw>0?pMonto(x.p)/tw:1/withC.length;
+  const plan=withC.length?withC.reduce((s,x)=>s+x.c.plan*w(x),0):null,real=withC.length?withC.reduce((s,x)=>s+x.c.real*w(x),0):null;
+  const venc=withC.reduce((s,x)=>s+x.c.venc,0),at=withC.reduce((s,x)=>s+x.c.at,0);
+  const late=withC.filter(x=>x.c.atraso>0).length,red=withC.filter(x=>semOf(x.c)==="bad").length;
+  const spi=plan>0?real/plan:null;
+  $("#cumKpi").innerHTML=`
+    <div class="chip total"><div class="lab">Línea base congelada</div><div class="num">${frz}<small>de ${ps.length}</small></div><div class="sub">${withC.length} proyectos con fechas LB</div></div>
+    <div class="chip"><div class="lab">Avance plan vs real</div><div class="num">${pctTxt(real)}<small>real</small></div><div class="sub">plan a hoy ${pctTxt(plan)} · ponderado por monto</div></div>
+    <div class="chip"><div class="lab">SPI cartera</div><div class="num ${spi!=null&&spi<0.85?"n-red":""}" style="${spi!=null&&spi>=0.95?"color:var(--green)":""}">${spi==null?"—":spi.toFixed(2)}</div><div class="sub">real ÷ planificado (LB)</div></div>
+    <div class="chip"><div class="lab">Hitos a tiempo</div><div class="num">${venc?Math.round(at/venc*100)+"%":"—"}</div><div class="sub">${at} de ${venc} hitos vencidos según LB</div></div>
+    <div class="chip"><div class="lab">Proyectos atrasados</div><div class="num n-red">${late}</div><div class="sub">${red} en rojo · término forecast &gt; LB</div></div>`;
+  const cortes=[...new Set(ps.flatMap(p=>(p.semanas||[]).map(s=>s.corte)))].sort().slice(-5);
+  $("#cumLast").textContent=cortes.length?"Último corte: "+fdate(cortes[cortes.length-1]):"Aún sin cortes semanales";
+  const head=`<thead><tr><th class="nm">Proyecto</th><th>Línea base</th><th class="num">Plan</th><th class="num">Real</th><th class="num">SPI</th><th class="num">Hitos a tiempo</th><th>Término LB</th><th>Forecast</th><th class="num">Atraso</th>${cortes.map(c=>`<th class="num wk" title="SPI al corte ${fdate(c)}">${dm(c)}</th>`).join("")}<th>Estado</th></tr></thead>`;
+  const body=rows.map(({p,c})=>{const s=semOf(c),sw=p.semanas||[];
+    return `<tr data-lbrow="${p.id}"><td class="nm"><b>${esc(p.nombre)}</b><small>${esc(p.tipo||"")}${catOf(p)?" · "+esc(catOf(p)):""}</small></td>
+      <td><button class="lbb ${c?s:"none"}" data-lb="${p.id}">${c?`<span class="sdot"></span>`:""}${lbState(p)==="borrador"&&!c?"＋ Definir":revTxt(p)}</button></td>
+      <td class="num">${c?pctTxt(c.plan):"—"}</td><td class="num">${c?pctTxt(c.real):"—"}</td>
+      <td class="num">${c&&c.spi!=null?c.spi.toFixed(2):"—"}</td><td class="num">${c?`${c.at}/${c.venc}`:"—"}</td>
+      <td>${c?fdate(c.endLb):"—"}</td><td>${c?fdate(c.endFc):"—"}</td>
+      <td class="num ${c&&c.atraso>0?"neg":""}">${c?atrTxt(c.atraso):"—"}</td>
+      ${cortes.map(k=>{const w=sw.find(x=>x.corte===k);return `<td class="num wk">${w&&w.spi!=null?w.spi.toFixed(2):"·"}</td>`}).join("")}
+      <td><span class="lbsem ${s}"><i></i>${SEMTXT[s]}</span></td></tr>`;}).join("");
+  $("#cumTable").innerHTML=head+`<tbody>${body}</tbody>`;
+  $("#cumEmpty").hidden=ps.length>0;
+}
+$("#cumTable").addEventListener("click",e=>{const b=e.target.closest("[data-lb]")||e.target.closest("[data-lbrow]");if(b)openLb(b.dataset.lb||b.dataset.lbrow);});
+
+/* cierre semanal: guarda una foto del cumplimiento de cada proyecto con LB */
+$("#cutBtn").addEventListener("click",()=>{$("#cutDate").value=hoy();
+  const n=projects.filter(p=>cumOf(p)).length;$("#cutInfo").textContent=`Se guardará la foto de ${n} proyecto${n===1?"":"s"} con línea base de la cartera ${YR}. Si ya existe un corte con esa fecha, se reemplaza.`;
+  $("#cutModal").hidden=false;});
+const closeCut=()=>{$("#cutModal").hidden=true;};
+$("#cutCancel").addEventListener("click",closeCut);
+$("#cutModal").addEventListener("mousedown",e=>{if(e.target===$("#cutModal"))closeCut();});
+$("#cutOk").addEventListener("click",()=>{const corte=$("#cutDate").value||hoy();let n=0;
+  projects.forEach(p=>{const c=cumOf(p,corte);if(!c)return;n++;
+    const w={corte,plan:+c.plan.toFixed(4),real:+c.real.toFixed(4),spi:c.spi==null?null:+c.spi.toFixed(3),venc:c.venc,at:c.at,atraso:c.atraso,rev:p.lbRev?p.lbRev.n:0};
+    save(p.id,{semanas:[...(p.semanas||[]).filter(s=>s.corte!==corte),w].sort((a,b)=>a.corte<b.corte?-1:1)});});
+  closeCut();toast(n?`Corte ${fdate(corte)} guardado · ${n} proyectos`:"No hay proyectos con línea base");});
+
+/* hojas Excel */
+function cumSheets(){
+  const d=hoy(),H=["Proyecto","Tipo","Categoría","Línea base","Avance plan (%)","Avance real (%)","SPI","Hitos vencidos","Hitos a tiempo","Término LB","Término forecast","Atraso (días)","Estado"];
+  const r=[H.map(h=>({v:h,s:1}))];
+  projects.forEach(p=>{const c=cumOf(p,d);
+    r.push([{v:p.nombre,s:7},p.tipo||"",catOf(p)||"",revTxt(p),c?Math.round(c.plan*100):"",c?Math.round(c.real*100):"",c&&c.spi!=null?+c.spi.toFixed(2):"",c?c.venc:"",c?c.at:"",c?fdate(c.endLb):"",c?fdate(c.endFc):"",c?c.atraso:"",SEMTXT[semOf(c)]]);});
+  const H2=["Proyecto","Iniciativa","Etapa","Estado","Término LB","Forecast","Real","Desviación (días)"];
+  const r2=[H2.map(h=>({v:h,s:1}))],ST={pend:"Pendiente",run:"En curso",pin:"Foco",ok:"Completada"};
+  projects.forEach(p=>kidsOf(p).forEach(i=>{const e=i.etapas||{},lb=i.lb||{},fc=i.fc||{},re=i.real||{};
+    stagesOf(i).forEach(s=>{const v=e[s.k]||"pend",L=lb[s.k],ref=v==="ok"?re[s.k]:(fc[s.k]||(L&&L<d?d:""));
+      if(!L&&!fc[s.k]&&!re[s.k])return;
+      r2.push([p.nombre,i.nombre,s.t,ST[v],fdate(L),fdate(fc[s.k]),fdate(re[s.k]),L&&ref?ddiff(ref,L):""]);});}));
+  return [{name:"Cumplimiento",rows:r,cols:[40,8,14,18,12,12,8,10,10,12,14,10,12],filter:true,freeze:[1,1],headerHeight:30},
+          {name:"Línea base etapas",rows:r2,cols:[30,36,24,12,12,12,12,12],filter:true,freeze:[1,1],headerHeight:20}];
+}
+
 /* ---------- arranque: archivo local (datos incluidos + guardado en este navegador) ---------- */
 const KEY="gpro-control-entregables-v4";
 const EMB=JSON.parse(document.getElementById("datos").textContent);
@@ -1477,13 +2071,13 @@ let stamp=EMB.exportado;
   try{saved=JSON.parse(localStorage.getItem(KEY)||"null");}catch(e){}
   const src=saved&&saved.proyectos&&saved.guardado>EMB.exportado?saved:EMB;
   if(src===saved)stamp=saved.guardado;
-  projects=structuredClone(src.proyectos||[]);inis=structuredClone(src.iniciativas||[]);costos=structuredClone(src.costos||EMB.costos||[]);
-  ajustes=structuredClone(EMB.ajustes||[]);
-  projects.sort((a,b)=>(a.orden||0)-(b.orden||0));
+  DB.proyectos=structuredClone(src.proyectos||[]);DB.iniciativas=structuredClone(src.iniciativas||[]);DB.costos=structuredClone(src.costos||EMB.costos||[]);
+  DB.ajustes=structuredClone(EMB.ajustes||[]);
+  DB.proyectos.sort((a,b)=>(a.orden||0)-(b.orden||0));
 })();
 function persist(){
   stamp=now();
-  try{localStorage.setItem(KEY,JSON.stringify({guardado:stamp,proyectos:projects,iniciativas:inis,costos}));
+  try{localStorage.setItem(KEY,JSON.stringify({guardado:stamp,proyectos:DB.proyectos,iniciativas:DB.iniciativas,costos:DB.costos}));
     $("#sync").textContent="Guardado en este navegador · "+new Date().toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"});$("#sync").classList.remove("warn");}
   catch(e){$("#sync").textContent="Usa “Guardar copia” para no perder cambios";$("#sync").classList.add("warn");}
 }
@@ -1491,11 +2085,11 @@ store={...store,add:persist,upd:persist,del:persist};
 const download=(blob,name)=>{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();};
 $("#dlBtn").addEventListener("click",()=>{
   const clone=document.documentElement.cloneNode(true);
-  clone.querySelector("#datos").textContent=JSON.stringify({exportado:now(),proyectos:projects,iniciativas:inis,costos,ajustes});
+  clone.querySelector("#datos").textContent=JSON.stringify({exportado:now(),proyectos:DB.proyectos,iniciativas:DB.iniciativas,costos:DB.costos,ajustes:DB.ajustes});
   clone.querySelector("#rows").innerHTML="";clone.querySelector("#summary").innerHTML="";
   clone.querySelectorAll(".pop,.toast").forEach(n=>n.remove());
   clone.querySelectorAll(".modal-bg").forEach(n=>n.setAttribute("hidden",""));
-  download(new Blob(["<!doctype html>\n"+clone.outerHTML],{type:"text/html"}),"Control_Entregables_GPRO_"+new Date().toISOString().slice(0,10)+".html");
+  download(new Blob(["<!doctype html>\n"+clone.outerHTML],{type:"text/html"}),"Control_Avance_Proyectos_GPRO_"+new Date().toISOString().slice(0,10)+".html");
   toast("Copia descargada con los datos actuales");
 });
 $("#xlsBtn").addEventListener("click",()=>{download(new Blob([buildWorkbook()],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),xlsName());toast("Excel descargado");});

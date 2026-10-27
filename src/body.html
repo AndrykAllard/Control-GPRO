@@ -2,9 +2,11 @@
   <div class="topbar">
     <div>
       <div class="kicker">GPRO Antucoya · Ingeniería</div>
-      <h1>Control de Entregables por Proyecto</h1>
+      <h1>Control de Avance de Proyectos</h1>
       <div class="accents"><span style="background:#00778B"></span><span style="background:#64CCC9"></span><span style="background:#4C8C2B"></span><span style="background:#EAAA00"></span><span style="background:#D22630"></span></div>
     </div>
+    <div class="seg zoomsel" role="group" aria-label="Zoom de la página"><button type="button" id="zOut" title="Alejar" aria-label="Alejar">−</button><button type="button" id="zVal" title="Volver a 100%">100%</button><button type="button" id="zIn" title="Acercar" aria-label="Acercar">+</button></div>
+    <div class="seg yrsel" role="group" aria-label="Cartera por año"><span class="yrlab">Cartera</span><button type="button" data-yr="2026" aria-pressed="false">2026</button><button type="button" data-yr="2027" aria-pressed="true">2027</button></div>
     <div class="sync" id="sync">Conectando…</div>
   </div>
 
@@ -12,6 +14,7 @@
     <button role="tab" id="tb-ent" data-tab="ent" aria-selected="true" aria-controls="tabEnt">Entregables</button>
     <button role="tab" id="tb-fin" data-tab="fin" aria-selected="false" aria-controls="tabFin">Flujos financieros</button>
     <button role="tab" id="tb-cos" data-tab="cos" aria-selected="false" aria-controls="tabCos">Control de costos</button>
+    <button role="tab" id="tb-cum" data-tab="cum" aria-selected="false" aria-controls="tabCum">Cumplimiento</button>
   </nav>
 
   <div class="tabpane" id="tabEnt" role="tabpanel" aria-labelledby="tb-ent">
@@ -23,6 +26,11 @@
       <button data-v="Capex" aria-pressed="false">CAPEX</button>
       <button data-v="C3" aria-pressed="false">C3</button>
       <button data-v="" aria-pressed="false">SIN TIPO</button>
+    </div>
+    <div class="seg" role="group" aria-label="Categoría" id="fCat">
+      <button data-v="all" aria-pressed="true">TODAS</button>
+      <button data-v="Ingeniería" aria-pressed="false">INGENIERÍA</button>
+      <button data-v="Construcción" aria-pressed="false">CONSTRUCCIÓN</button>
     </div>
     <select id="fFase" aria-label="Fase del estudio"></select>
     <input type="search" id="fQ" placeholder="Buscar proyecto o iniciativa" aria-label="Buscar proyecto o iniciativa">
@@ -52,22 +60,57 @@
   <div class="card adj" id="adjCard" hidden>
     <h2>Ajustes de cartera</h2>
     <p class="adjnote">Restas de presupuesto que no son proyectos de la matriz, pero se suman al total para cuadrar con el Caso Base.</p>
-    <table class="adjt"><thead><tr><th>Ítem</th><th>Tipo</th><th class="num">PPTO 2027 (kUS$)</th></tr></thead><tbody id="adjBody"></tbody></table>
+    <table class="adjt"><thead><tr><th>Ítem</th><th>Tipo</th><th class="num">PPTO <span class="yrT">2027</span> (kUS$)</th></tr></thead><tbody id="adjBody"></tbody></table>
   </div>
 
   <div class="foot" id="legend"></div>
   </div>
 
   <div class="tabpane" id="tabFin" role="tabpanel" aria-labelledby="tb-fin" hidden>
+    <div class="toolbar"><div class="seg" role="group" aria-label="Tipo de iniciativa" id="fTipoF">
+      <button data-v="all" aria-pressed="true">TODOS</button>
+      <button data-v="Capex" aria-pressed="false">CAPEX</button>
+      <button data-v="C3" aria-pressed="false">C3</button>
+      <button data-v="" aria-pressed="false">SIN TIPO</button>
+    </div><div class="seg" role="group" aria-label="Categoría" id="fCatF">
+      <button data-v="all" aria-pressed="true">TODAS</button>
+      <button data-v="Ingeniería" aria-pressed="false">INGENIERÍA</button>
+      <button data-v="Construcción" aria-pressed="false">CONSTRUCCIÓN</button>
+    </div><span class="fsub">Filtra la curva y el plan mensual</span><div class="spacer"></div><span class="cl">Mes</span><div class="seg" role="group" aria-label="Mes de los indicadores" id="finMes"></div></div>
     <section class="chips" id="finKpi" aria-label="Resumen flujos"></section>
     <div class="card">
-      <div class="fhead"><h2>Curva S · plan acumulado</h2><span class="fsub" id="curveSub"></span></div>
+      <div class="fhead"><h2>Curva S · plan, 9+3 y real</h2><span class="fsub" id="curveSub"></span></div>
       <div id="curve" class="curve"></div>
+      <div class="cpistrip" id="cpiStrip" role="group" aria-label="CPI por mes"></div>
     </div>
     <div class="card">
-      <div class="fhead"><h2>Plan mensual por iniciativa</h2><span class="fsub">kUS$ · oct-2026 a dic-2027 · escribe en cualquier celda para corregir</span><span class="spacer"></span><button class="btn-ghost sm" id="xlsBtn2" type="button">⤓ Excel</button></div>
+      <div class="fhead"><h2>CPI · valor ganado por proyecto</h2><span class="fsub" id="evmSub"></span></div>
+      <div class="scroll" id="evmBox"></div>
+      <p class="adjnote" style="margin:8px 0 0">CPI = EV ÷ AC (≥1 en verde: avanza lo que gasta) · SPI = EV ÷ PV · Desv. vs plan = real − plan a la fecha · CV = EV − AC · EAC = PPTO ÷ CPI. El avance físico es el % que escribas para cada proyecto; si lo dejas vacío se usa el avance por etapas de Entregables.</p>
+    </div>
+    <div class="card">
+      <div class="fhead"><h2>Flujo mensual por iniciativa</h2><div class="seg" role="group" aria-label="Serie" id="finSer"></div><span class="fsub" id="finHint"></span><span class="spacer"></span><button class="btn-ghost sm" id="finReopen" type="button" hidden></button><button class="btn-add sm" id="finClose" type="button" hidden></button><button class="btn-ghost sm" id="xlsBtn2" type="button">⤓ Excel</button></div>
       <div class="scroll"><table class="fint" id="finTable" lang="es"></table></div>
       <p class="adjnote" style="margin:10px 0 0">Los proyectos con iniciativas se planifican por iniciativa; los demás, como una sola partida. Los ajustes de cartera (restas) no tienen flujo y no entran en esta hoja.</p>
+    </div>
+  </div>
+
+  <div class="tabpane" id="tabCum" role="tabpanel" aria-labelledby="tb-cum" hidden>
+    <div class="toolbar"><div class="seg" role="group" aria-label="Tipo de iniciativa" id="fTipoC">
+      <button data-v="all" aria-pressed="true">TODOS</button>
+      <button data-v="Capex" aria-pressed="false">CAPEX</button>
+      <button data-v="C3" aria-pressed="false">C3</button>
+      <button data-v="" aria-pressed="false">SIN TIPO</button>
+    </div><div class="seg" role="group" aria-label="Categoría" id="fCatC">
+      <button data-v="all" aria-pressed="true">TODAS</button>
+      <button data-v="Ingeniería" aria-pressed="false">INGENIERÍA</button>
+      <button data-v="Construcción" aria-pressed="false">CONSTRUCCIÓN</button>
+    </div><div class="spacer"></div><span class="fsub" id="cumLast"></span><button class="btn-add" id="cutBtn" type="button">Cerrar semana</button></div>
+    <section class="chips" id="cumKpi" aria-label="Resumen cumplimiento"></section>
+    <div class="card">
+      <div class="fhead"><h2>Cumplimiento por proyecto</h2><span class="fsub">vs línea base vigente · las columnas de fecha muestran el SPI de los últimos cortes · toca un proyecto para ver su línea base</span></div>
+      <div class="scroll"><table class="cumt" id="cumTable" lang="es"></table></div>
+      <div class="empty" id="cumEmpty" hidden><strong>No hay proyectos con este filtro</strong></div>
     </div>
   </div>
 
@@ -82,9 +125,9 @@
     </div>
     <section class="chips" id="cosKpi" aria-label="Resumen de costos"></section>
     <div class="card">
-      <div class="fhead"><h2>Estado de costos · 9 columnas + flujo mensual</h2><span class="fsub">kUS$ · formato PCS-PR-015 · ▸ despliega ítems · “▸ CY27” abre los meses</span><span class="spacer"></span><button class="btn-ghost sm" id="cosExp" type="button">Expandir todo</button><button class="btn-ghost sm" id="cosAddIt" type="button">＋ Ítem</button></div>
+      <div class="fhead"><h2>Estado de costos · 9 columnas + flujo mensual</h2><span class="fsub">kUS$ · formato PCS-PR-015 · ▸ despliega ítems · “▸ <span class="cyT">CY27</span>” abre los meses</span><span class="spacer"></span><button class="btn-ghost sm" id="cosExp" type="button">Expandir todo</button><button class="btn-ghost sm" id="cosAddIt" type="button">＋ Ítem</button></div>
       <div class="scroll"><table class="cost" id="cosTable" lang="es"></table></div>
-      <p class="adjnote" style="margin:10px 0 0">Presupuesto aprobado = base + cambios de alcance y transferencias. Variación = EAC − aprobado (positivo = sobrecosto; EAC vacío = aprobado). Calce = aprobado − total del flujo (CY26 + meses 2027 + CY28): ✓ cuando el flujo cubre el presupuesto.</p>
+      <p class="adjnote" style="margin:10px 0 0">Presupuesto aprobado = base + cambios de alcance y transferencias. Variación = EAC − aprobado (positivo = sobrecosto; EAC vacío = aprobado). Calce = aprobado − total del flujo (<span id="calceTxt">CY26 + meses 2027 + CY28</span>): ✓ cuando el flujo cubre el presupuesto.</p>
     </div>
     <div class="empty" id="cosEmpty" hidden><strong>Aún no hay reportes de costos</strong><span>Crea el primero con “＋ Nuevo reporte”.</span></div>
   </div>
@@ -97,15 +140,28 @@
       <div class="fld full"><label for="fmNombre">Nombre proyecto (corto)</label><input id="fmNombre" type="text" placeholder="Nombre corto, ej. PTAS" required></div>
       <div class="fld"><label for="fmFase">Fase de ingeniería</label><select id="fmFase"></select></div>
       <div class="fld"><label for="fmPep">PEP</label><input id="fmPep" type="text" placeholder="Ej. 1003-25PE413"></div>
-      <div class="fld"><label for="fmMonto">PPTO 2027 (kUS$)</label><input id="fmMonto" type="number" step="0.1" min="0" inputmode="decimal" placeholder="0,0"><span class="fhint" id="fmMontoHint" hidden>Las iniciativas se comparan contra este monto; la diferencia aparece como “sin asignar”.</span></div>
+      <div class="fld"><label for="fmMonto">PPTO <span class="yrT">2027</span> (kUS$)</label><input id="fmMonto" type="number" step="0.1" min="0" inputmode="decimal" placeholder="0,0"><span class="fhint" id="fmMontoHint" hidden>Las iniciativas se comparan contra este monto; la diferencia aparece como “sin asignar”.</span></div>
       <div class="fld"><span class="flab">Tipo de iniciativa</span>
         <div class="tipo big" role="radiogroup" aria-label="Tipo de iniciativa" id="fmTipo">
           <button type="button" class="capex" data-v="Capex" role="radio" aria-checked="false">Capex</button>
           <button type="button" class="c3" data-v="C3" role="radio" aria-checked="false">C3</button>
         </div></div>
+      <div class="fld"><span class="flab">Categoría</span>
+        <div class="tipo big" role="radiogroup" aria-label="Categoría" id="fmCat">
+          <button type="button" class="cing" data-v="Ingeniería" role="radio" aria-checked="false">Ingeniería</button>
+          <button type="button" class="ccon" data-v="Construcción" role="radio" aria-checked="false">Construcción</button>
+        </div></div>
       <div class="fld"><label for="fmJi">Jefe de Ingeniería</label><input id="fmJi" type="text" list="respList" placeholder="Nombre"></div>
       <div class="fld"><label for="fmJe">Jefe Ejecutor</label><input id="fmJe" type="text" list="respList" placeholder="Nombre o TBD"><datalist id="respList"></datalist></div>
       <div class="fld full"><label for="fmDesc">Descripción</label><input id="fmDesc" type="text" placeholder="Ej. PFS Mejoramiento PTAS 3400"></div>
+      <div class="fld full" id="fmKindFld"><span class="flab">Primera iniciativa · tipo de seguimiento</span>
+        <div class="tipo big kindsel" role="radiogroup" aria-label="Tipo de seguimiento de la primera iniciativa" id="fmKind">
+          <button type="button" class="ing" data-v="ing" role="radio" aria-checked="false">Servicio de ingeniería</button>
+            <button type="button" class="ens" data-v="ens" role="radio" aria-checked="false">Ensayo</button>
+            <button type="button" class="med" data-v="med" role="radio" aria-checked="false">Medición</button>
+          <button type="button" class="con" data-v="con" role="radio" aria-checked="false">Construcción</button>
+          <button type="button" class="per" data-v="per" role="radio" aria-checked="false">Permiso</button>
+        </div><span class="fhint">Se crea con el nombre de la descripción (o del proyecto) y el PPTO del proyecto. Luego puedes agregar más.</span></div>
     </div>
     <p class="ferr" id="fmErr" hidden>Escribe el nombre del proyecto para poder guardarlo.</p>
     <div class="factions">
@@ -126,10 +182,12 @@
           <button type="button" class="ing" data-v="ing" role="radio" aria-checked="false">Servicio de ingeniería</button>
           <button type="button" class="ens" data-v="ens" role="radio" aria-checked="false">Ensayo</button>
           <button type="button" class="med" data-v="med" role="radio" aria-checked="false">Medición</button>
+          <button type="button" class="con" data-v="con" role="radio" aria-checked="false">Construcción</button>
+          <button type="button" class="per" data-v="per" role="radio" aria-checked="false">Permiso</button>
         </div></div>
       <div class="kstages" id="ifStages"></div>
-      <div class="fld"><label for="ifPpto">PPTO 2027 (kUS$)</label><input id="ifPpto" type="number" step="0.1" inputmode="decimal" placeholder="0,0"></div>
-      <div class="fld"><label for="ifCb">CB 2027 (kUS$)</label><input id="ifCb" type="number" step="0.1" inputmode="decimal" placeholder="0,0"></div>
+      <div class="fld"><label for="ifPpto">PPTO <span class="yrT">2027</span> (kUS$)</label><input id="ifPpto" type="number" step="0.1" inputmode="decimal" placeholder="0,0"></div>
+      <div class="fld"><label for="ifCb">CB <span class="yrT">2027</span> (kUS$)</label><input id="ifCb" type="number" step="0.1" inputmode="decimal" placeholder="0,0"></div>
       <div class="fld"><label for="ifProv">Empresa / proveedor</label><input id="ifProv" type="text" list="provList" placeholder="Ej. laboratorio o consultora"><datalist id="provList"></datalist></div>
       <div class="fld"><label for="ifOc">N° OC / contrato</label><input id="ifOc" type="text" placeholder="Ej. 4500012345"></div>
       <div class="fld full"><label for="ifResp">Responsable</label><input id="ifResp" type="text" list="respList" placeholder="Nombre"></div>
@@ -173,9 +231,27 @@
       <div class="fld itx"><label for="itUnid">Unidad</label><input id="itUnid" type="text" placeholder="m3, m2, gl…"></div>
       <div class="fld itx"><label for="itPpto">Ppto aprobado (kUS$)</label><input id="itPpto" type="number" step="0.1" placeholder="0,0"></div>
       <div class="fld itx"><label for="itMeses">Meses</label><input id="itMeses" type="number" min="1" step="1" placeholder="Ej. 8"></div>
-      <div class="fld full itx"><label for="itIni">Distribuir el ppto en partes iguales desde</label><select id="itIni"></select><span class="fhint">Reparte el ppto entre los meses indicados. Lo que pase de dic-27 se suma a CY28. Puedes corregir cada mes después.</span></div>
+      <div class="fld full itx"><label for="itIni">Distribuir el ppto en partes iguales desde</label><select id="itIni"></select><span class="fhint">Reparte el ppto entre los meses indicados. Lo que pase de <span class="decT">dic-27</span> se suma a <span class="cynT">CY28</span>. Puedes corregir cada mes después.</span></div>
     </div>
     <p class="ferr" id="itErr" hidden>Escribe la descripción del ítem.</p>
     <div class="factions"><button type="button" class="btn-ghost" id="itCancel">Cancelar</button><button type="submit" class="btn-add" id="itOk">Agregar</button></div>
   </form>
+</div>
+
+<div class="modal-bg" id="lbModal" hidden>
+  <div class="modal lbm" role="dialog" aria-modal="true" aria-labelledby="lbTitle">
+    <h3 id="lbTitle">Línea base</h3>
+    <div id="lbHead"></div>
+    <div class="lbscroll"><table class="lbt" id="lbTable" lang="es"></table></div>
+    <div id="lbHist"></div>
+    <div class="factions"><button type="button" class="btn-ghost" id="lbClose">Cerrar</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="cutModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cutTitle">
+    <h3 id="cutTitle">Cerrar semana</h3>
+    <div class="fgrid"><div class="fld full"><label for="cutDate">Fecha de corte</label><input id="cutDate" type="date"></div></div>
+    <p class="adjnote" id="cutInfo" style="margin:10px 0 0"></p>
+    <div class="factions"><button type="button" class="btn-ghost" id="cutCancel">Cancelar</button><button type="button" class="btn-add" id="cutOk">Guardar corte</button></div>
+  </div>
 </div>

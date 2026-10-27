@@ -14,9 +14,9 @@ w = lambda f, s: open(os.path.join(D, f), 'w', encoding='utf-8').write(s)
 css = r('base.css').replace('tbody tr:nth-child(odd) td{background:var(--zebra)}\n', '').replace('tbody tr:nth-child(even) td{background:var(--white)}\n', '')
 css = css.replace('th.c-del{width:64px}', 'th.c-del{width:84px}')
 css += r('extra.css') + '</style>\n'
-app = r('app.js').replace('/*@XLSXW@*/', r('xlsxw.js'))
+app = r('app.js').replace('/*@XLSXW@*/', r('xlsxw.js')) + '\n' + r('lb.js')
 body = r('body.html')
-title = '<title>Control Entregables GPRO</title>\n'
+title = '<title>Control de Avance de Proyectos</title>\n'
 head = '<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n'
 DLBTN = '<button class="btn-ghost" id="dlBtn" title="Descarga este archivo con los datos actuales">⤓ Guardar copia</button>'
 
